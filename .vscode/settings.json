@@ -1,0 +1,9 @@
+{
+    "eslint.format.enable": true,
+    "eslint.run": "onSave",
+    "eslint.alwaysShowStatus": true,
+    "eslint.lintTask.enable": true,
+    "eslint.onIgnoredFiles": "warn",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+}
