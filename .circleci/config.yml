@@ -20,10 +20,10 @@ jobs:
                       - ./node_modules
             - run:
                   name: static-analysis
-                  command: npm eslint **
+                  command: npx eslint **
             - run:
                   name: formatting-check
-                  command: npm prettier -c **
+                  command: npx prettier -c **
             - run:
                   name: test
                   command: npm test
