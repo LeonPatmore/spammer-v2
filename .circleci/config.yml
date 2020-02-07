@@ -20,7 +20,7 @@ jobs:
                       - ./node_modules
             - run:
                   name: static-analysis
-                  command: npx eslint **
+                  command: chmod -R 777 ./node_modules && npx eslint **
             - run:
                   name: formatting-check
                   command: npx prettier -c **
