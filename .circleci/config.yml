@@ -19,11 +19,11 @@ jobs:
                   paths:
                       - ./node_modules
             - run:
-                  name: static-analysis
-                  command: chmod -R 777 ./node_modules && npx eslint **
-            - run:
                   name: formatting-check
                   command: npx prettier -c **
+            - run:
+                  name: static-analysis
+                  command: chmod -R 777 ./node_modules && npx eslint **
             - run:
                   name: test
                   command: npm test
