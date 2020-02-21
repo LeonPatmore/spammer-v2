@@ -4,8 +4,8 @@
     "description": "",
     "main": "test.js",
     "scripts": {
-        "start": "node main.js",
-        "test": "mocha",
+        "start": "node src/main.js",
+        "test": "mocha src/test/**",
         "lint": "eslint **/*.js"
     },
     "author": "",
