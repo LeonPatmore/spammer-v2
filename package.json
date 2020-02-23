@@ -25,5 +25,15 @@
     },
     "dependencies": {
         "http-status-codes": "^1.4.0"
+    },
+    "jest": {
+        "collectCoverage": true,
+        "coverageDirectory": "coverage",
+        "global": {
+            "branches": 80,
+            "functions": 80,
+            "lines": 80,
+            "statements": 80
+        }
     }
 }
