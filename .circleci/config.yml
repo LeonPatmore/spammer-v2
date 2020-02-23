@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+      docker: circleci/docker@0.5.20
 jobs:
     build:
         working_directory: ~
@@ -27,3 +29,6 @@ jobs:
             - run:
                   name: test
                   command: npm test
+            - docker/publish:
+                  image: leonpatmore/spammer-v2
+                  tag: ${CIRCLE_SHA1}
