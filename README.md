@@ -1,5 +1,8 @@
 # SpammerV2
 
+[![<LeonPatmore>](https://circleci.com/gh/LeonPatmore/spammer-v2.svg?style=shield)](<LINK>)
+
+
 ## Running
 
 `npm start`
