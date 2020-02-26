@@ -13,6 +13,9 @@ class HttpServer {
         httpServer.listen(port, hostname);
         this.httpServer = httpServer;
     }
+    closeServer() {
+        this.httpServer.close();
+    }
 }
 
 module.exports = HttpServer;

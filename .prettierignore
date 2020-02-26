@@ -1,5 +1,9 @@
 .eslintignore
 .prettierignore
 .gitignore
-coverage/**
+.dockerignore
+patches
+coverage
 README.md
+reports
+Dockerfile

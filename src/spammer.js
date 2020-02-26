@@ -6,3 +6,5 @@ const httpSever = new HttpServer('0.0.0.0', 5435, function(request, response) {
     response.statusCode = httpStatus.CREATED;
     response.end();
 });
+
+module.exports = httpSever;

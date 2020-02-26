@@ -1,7 +1,15 @@
 const rest = require('rest');
 
-// Start spammer.
-require('../spammer');
+let spammer;
+
+beforeAll(() => {
+    // Start spammer.
+    spammer = require('../spammer');
+});
+
+afterAll(() => {
+    spammer.closeServer();
+});
 
 function sendRequest() {
     return new Promise(resolve => {
