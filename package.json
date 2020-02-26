@@ -32,6 +32,7 @@
         "sinon": "^9.0.0"
     },
     "dependencies": {
+        "convict": "^5.2.0",
         "http-status-codes": "^1.4.0"
     },
     "jest": {

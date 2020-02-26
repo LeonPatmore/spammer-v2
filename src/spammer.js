@@ -1,8 +1,9 @@
 const httpStatus = require('http-status-codes');
 const HttpServer = require('./server/http-server');
+const configuration = require('./configuration/configuration');
 
 console.log('Starting HTTP server...');
-const httpSever = new HttpServer('0.0.0.0', 5435, function(request, response) {
+const httpSever = new HttpServer('0.0.0.0', configuration.get('port'), function(request, response) {
     response.statusCode = httpStatus.CREATED;
     response.end();
 });
