@@ -38,7 +38,7 @@ The mutation report is generated in `reports/mutation/html`.
 
 Mutation test coverage thresholds are configuered in `stryker.conf.js`:
 
-```json
+```text
 thresholds: {
     high: 80,
     low: 60,
