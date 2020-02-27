@@ -12,15 +12,10 @@ afterAll(() => {
 });
 
 function sendRequest() {
-    return new Promise(resolve => {
-        rest('http://localhost:5435/').then(response => {
-            resolve(response);
-        });
-    });
+    return rest('http://localhost:5435/');
 }
 
-it('Ensure that spammer returns 201', () => {
-    return sendRequest().then(response => {
-        expect(response.status.code).toEqual(201);
-    });
+it('Ensure that spammer returns 201', async () => {
+    const response = await sendRequest();
+    expect(response.status.code).toEqual(201);
 });

@@ -1,11 +1,12 @@
 const http = require('http');
 
-/**
- *
- * @param {*} hostname
- * @param {*} port
- */
 class HttpServer {
+    /**
+     * Create a HTTP server.
+     * @param {*} hostname Hostname to bind the server to.
+     * @param {*} port Port to bind the server to.
+     * @param {*} requestListener A request listener function to handle requests.
+     */
     constructor(hostname, port, requestListener) {
         // Create and start HTTP server.
         const httpServer = http.createServer(requestListener);
@@ -13,6 +14,10 @@ class HttpServer {
         httpServer.listen(port, hostname);
         this.httpServer = httpServer;
     }
+
+    /**
+     * Close the HTTP server.
+     */
     closeServer() {
         this.httpServer.close();
     }
