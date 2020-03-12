@@ -13,23 +13,23 @@ class PerformanceRun {
         var i = 0;
         for (i = 0; i < this.runtimeSeconds; i++) {
             batchNumber++;
-            batches[i] = this.sendBatch(batchNumber);
+            batches[i] = this._sendBatch(batchNumber);
             await sleep(1000);
         }
         await Promise.all(batches).then(_ => onFinish('hello'));
     }
 
-    async sendBatch(batchIndex) {
+    async _sendBatch(batchIndex) {
         const requests = Array(this.rps);
         var i;
         for (i = 0; i < this.rps; i++) {
-            requests[i] = this.runRequest();
+            requests[i] = this._sendRequest();
         }
         await Promise.all(requests);
         console.log('Finished batch ' + batchIndex);
     }
 
-    async sendRequest() {
+    async _sendRequest() {
         const result = await runRequest();
         return result;
     }

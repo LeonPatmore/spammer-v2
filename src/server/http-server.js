@@ -1,18 +1,23 @@
-const http = require('http');
+const Express = require('express');
 
 class HttpServer {
     /**
      * Create a HTTP server.
      * @param {*} hostname Hostname to bind the server to.
      * @param {*} port Port to bind the server to.
-     * @param {*} requestListener A request listener function to handle requests.
      */
-    constructor(hostname, port, requestListener) {
+    constructor(hostname, port) {
         // Create and start HTTP server.
-        const httpServer = http.createServer(requestListener);
         console.log(`Starting HTTP server, host [ ${hostname} ], port [ ${port} ]`);
-        httpServer.listen(port, hostname);
-        this.httpServer = httpServer;
+        this.express = Express();
+        this.httpServer = this.express.listen(port, hostname);
+    }
+
+    /**
+     * Alias for express handler.
+     */
+    get handler() {
+        return this.express;
     }
 
     /**
