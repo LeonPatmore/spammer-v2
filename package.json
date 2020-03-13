@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node src/spammer.js",
         "test": "jest",
-        "lint": "eslint **/*.js",
+        "lint": "eslint .",
         "mutation": "npx stryker run",
         "postinstall": "patch-package"
     },
