@@ -21,7 +21,7 @@ class PerformanceRun {
 
     async _sendBatch(batchIndex) {
         const requests = Array(this.rps);
-        var i;
+        let i;
         for (i = 0; i < this.rps; i++) {
             requests[i] = this._sendRequest();
         }
@@ -30,7 +30,7 @@ class PerformanceRun {
     }
 
     async _sendRequest() {
-        const result = await runRequest();
+        const result = await this.runRequest();
         return result;
     }
 }

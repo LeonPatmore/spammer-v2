@@ -7,6 +7,11 @@ const config = convict({
         default: 5435,
         env: 'SPAMMER_PORT',
     },
+    remoteClients: {
+        doc: 'If provided, will act as a host for the given clients.',
+        default: 'some-client.com',
+        env: 'REMOTE_CLIENTS',
+    },
 });
 
 config.validate({ allowed: 'strict' });

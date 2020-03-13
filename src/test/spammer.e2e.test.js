@@ -2,11 +2,6 @@ const rest = require('rest');
 
 let spammer;
 
-beforeAll(() => {
-    // Start spammer.
-    spammer = require('../spammer');
-});
-
 afterAll(() => {
     spammer.closeServer();
 });
@@ -16,6 +11,7 @@ function sendRequest() {
 }
 
 it('Ensure that spammer returns 201', async () => {
+    spammer = require('../spammer');
     const response = await sendRequest();
     expect(response.status.code).toEqual(201);
 });
