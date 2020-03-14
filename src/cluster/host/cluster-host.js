@@ -25,7 +25,7 @@ class ClusterHost {
         var i;
         for (i = 0; i < 10; i++) {
             logger.info('Still waiting for hosts to be ready!');
-            await sleep(1000);
+            await sleep(10);
         }
     }
 }
