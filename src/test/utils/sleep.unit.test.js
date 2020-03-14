@@ -5,5 +5,6 @@ each([50, 500, 100]).it('Ensure sleep sleeps for the correct amount of time', as
     const startTime = new Date().getTime();
     await sleep(timeout);
     const milliesTaken = new Date().getTime() - startTime;
-    expect(milliesTaken).toBeGreaterThanOrEqual(timeout);
+    // Plus one required due to rounding conditions.
+    expect(milliesTaken + 1).toBeGreaterThanOrEqual(timeout);
 });
