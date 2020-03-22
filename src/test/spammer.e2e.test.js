@@ -1,5 +1,8 @@
+/**
+ * @jest-environment node
+ */
+
 const axios = require('axios').default;
-const sleep = require('../utils/sleep');
 
 let spammer;
 
