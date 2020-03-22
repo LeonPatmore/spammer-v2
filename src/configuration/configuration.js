@@ -9,7 +9,7 @@ const config = convict({
     },
     remoteClients: {
         doc: 'If provided, will act as a host for the given clients.',
-        default: 'some-client.com',
+        default: null,
         env: 'REMOTE_CLIENTS',
     },
 });

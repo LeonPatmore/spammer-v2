@@ -12,15 +12,27 @@ class HttpServer {
         // Create and start HTTP server.
         logger.info(`Starting HTTP server, host [ ${hostname} ], port [ ${port} ]`);
         this.express = express();
+        this.express.use(express.json());
         this.express.use(expressPinoLogger());
         this.httpServer = this.express.listen(port, hostname);
     }
 
     /**
-     * Alias for express handler.
+     *
+     * @param {*} path
+     * @param {*} handlerFunction
      */
-    get handler() {
-        return this.express;
+    addGetHandler(path, handlerFunction) {
+        this.express.get(path, handlerFunction);
+    }
+
+    /**
+     *
+     * @param {*} path
+     * @param {*} handlerFunction
+     */
+    addPostHandler(path, handlerFunction) {
+        this.express.post(path, handlerFunction);
     }
 
     /**

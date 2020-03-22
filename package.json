@@ -5,7 +5,7 @@
     "main": "test.js",
     "scripts": {
         "start": "node src/spammer.js",
-        "test": "jest",
+        "test": "jest --env=node",
         "lint": "eslint .",
         "mutation": "npx stryker run",
         "postinstall": "patch-package"
@@ -29,7 +29,6 @@
         "oaf-side-effects": "^3.0.0",
         "patch-package": "^6.2.0",
         "prettier": "1.19.1",
-        "rest": "^2.0.0",
         "sinon": "^9.0.0"
     },
     "dependencies": {
@@ -38,14 +37,15 @@
         "express": "^4.17.1",
         "express-pino-logger": "^4.0.0",
         "http-status-codes": "^1.4.0",
-        "pino": "^5.17.0"
+        "pino": "^5.17.0",
+        "uuid": "^7.0.2"
     },
     "jest": {
         "collectCoverage": true,
         "coverageDirectory": "coverage",
         "coverageThreshold": {
             "global": {
-                "branches": 50,
+                "branches": 70,
                 "functions": 70,
                 "lines": 70,
                 "statements": 70
