@@ -1,0 +1,53 @@
+frame connectToServer (clientPublicUrl, clientUuid)
+
+actor SpammerClient
+
+participant SpammerHostServer
+participant SpammerHostManager
+participant SpammerHostClientStore
+
+SpammerClient->SpammerHostServer: HTTP POST /v1/connect
+activate SpammerHostServer
+
+SpammerHostServer->SpammerHostManager: addClient (clientPublicUrl, clientUuid)
+activate SpammerHostManager
+
+SpammerHostManager->SpammerHostClientStore: checkClientExists (clientUuid)
+activate SpammerHostClientStore
+
+SpammerHostClientStore->SpammerHostManager:doesClientExist
+deactivate SpammerHostClientStore
+
+alt doesClientExist
+
+SpammerHostManager->SpammerHostServer: Client Exists
+SpammerHostServer->SpammerClient: 400 Bad Request
+
+else 
+
+SpammerHostManager->SpammerHostManager:validateClientPublicUrl (clientPublicUrl)
+
+alt validPublicUrl
+
+SpammerHostManager->SpammerHostClientStore:addClient(clientPublicUrl, clientUuid)
+activate SpammerHostClientStore
+
+SpammerHostClientStore->SpammerHostManager:
+deactivate SpammerHostClientStore
+
+
+SpammerHostManager->SpammerHostServer:
+
+SpammerHostServer->SpammerClient: 200 OK
+
+else 
+
+SpammerHostManager->SpammerHostServer:Not Valid Public Url
+deactivate SpammerHostManager
+
+SpammerHostServer->SpammerClient:400 Bad Request
+deactivate SpammerHostServer
+
+end 
+
+end 

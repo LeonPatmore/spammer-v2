@@ -33,6 +33,20 @@ class ClusterHost {
             await sleep(10);
         }
     }
+
+    async connectRemoteHost(remoteHost) {
+        this.httpClient
+            .post(this._constructRemoteHostLinkUrl(remoteHost.socketAddress), {
+                host_id: this.hostId,
+            })
+            .then(res => {
+                res;
+            });
+    }
+
+    _constructRemoteHostLinkUrl(socketAddress) {
+        return `http://${socketAddress}/link`;
+    }
 }
 
 module.exports = ClusterHost;

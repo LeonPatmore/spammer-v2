@@ -2,7 +2,6 @@
 
 [![<LeonPatmore>](https://circleci.com/gh/LeonPatmore/spammer-v2.svg?style=shield)](<LINK>)
 
-
 ## Running
 
 `npm start`
@@ -54,3 +53,9 @@ thresholds: {
 `npm run lint`: Run ESLint against all JS code, including the Prettier plugin.
 
 `npx prettier -c **`: Ensures that all files (not just JS files) are correctly formatted. To fix formatting, you can run `npx prettier --write **`.
+
+## Sequence Diagrams
+
+### Connect to Server
+
+![Connect to Server sequence diagram.](docs/connectToServer.png)
