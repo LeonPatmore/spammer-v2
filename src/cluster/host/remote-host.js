@@ -1,7 +1,10 @@
+/**
+ * An object which represents a remote host.
+ */
 class RemoteHost {
-    constructor(socketAddress) {
+    constructor(socketAddress, uuid) {
         this.socketAddress = socketAddress;
-        this.connected = false;
+        this.uuid = uuid;
     }
 }
 

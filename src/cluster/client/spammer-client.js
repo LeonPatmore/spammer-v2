@@ -27,7 +27,7 @@ class SpammerClient {
         if (this.hasRun()) {
             throw new ClientAlreadyRunningPerformance(this.performanceRunId);
         }
-        this.performanceRunId = 'a';
+        this.performanceRunId = runConfig.run_id;
     }
 }
 
