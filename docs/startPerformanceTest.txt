@@ -1,0 +1,56 @@
+frame startPerformanceTest (config) : Performance Run Uuid
+
+actor User
+
+participant SpammerHostServer
+participant SpammerHostManager
+
+User->SpammerHostServer:HTTP POST /v1/performance
+activate SpammerHostServer
+
+SpammerHostServer->SpammerHostManager:startPerformanceTest (config)
+activate SpammerHostManager
+
+SpammerHostManager->SpammerHostManager: determineSpammerClients ()
+activate SpammerHostManager
+
+alt clients < 0
+
+SpammerHostManager-->SpammerHostServer: Not Enough Clients
+SpammerHostServer-->User:400 Bad Request
+
+else 
+
+loop spammerClient
+
+SpammerHostManager->SpammerHostManager: sendSpammerClientRequest (config, spammerClient)
+activate SpammerHostManager
+
+SpammerHostManager->SpammerHostManager: validateSpammerClientResponse (config, spammerClient)
+activate SpammerHostManager
+
+opt notValid
+
+SpammerHostManager->SpammerHostManager: invalidatePreviousSpammmerRequests (previousSpammerClients)
+activate SpammerHostManager
+
+SpammerHostManager-->SpammerHostServer: Spammer Client Error
+deactivate SpammerHostManager
+
+SpammerHostServer-->User: 500 Internal Server Error
+
+end
+
+deactivate SpammerHostManager
+deactivate SpammerHostManager
+
+end
+
+SpammerHostManager-->SpammerHostServer: PerformanceUUID
+deactivate SpammerHostManager
+deactivate SpammerHostManager
+
+SpammerHostServer-->User: 200 OK 
+deactivate SpammerHostServer
+
+end 

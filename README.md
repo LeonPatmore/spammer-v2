@@ -59,3 +59,7 @@ thresholds: {
 ### Connect to Server
 
 ![Connect to Server sequence diagram.](docs/connectToServer.png)
+
+### Start Performance Test
+
+![Start Performance Test sequence diagram.](docs/startPerformanceTest.png)
