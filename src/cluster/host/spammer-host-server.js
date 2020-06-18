@@ -18,33 +18,58 @@ class SpammerHostServer {
     constructor(hostname, port, spammerHostManager) {
         this.httpServer = new HttpServer(hostname, port);
         logger.info(`${SpammerHostServer.apiVersion}/${SpammerHostServer.connectPath}`);
-        this.httpServer.addPostHandler('/hello', (req, res) => {
-            res.status(httpStatus.ACCEPTED).end();
-        });
-        this.httpServer.addPostHandler('/v1/connect', (req, res) => {
-            if (!req.body.hasOwnProperty('uuid')) {
-                res.status(httpStatus.BAD_REQUEST).json({
-                    error: 'Field `uuid` is required.',
-                });
-            } else if (!req.body.hasOwnProperty('socket_address')) {
-                res.status(httpStatus.BAD_REQUEST).json({
-                    error: 'Field `socket_address` is required.',
-                });
-            } else {
-                try {
-                    spammerHostManager.addRemoteHost(new RemoteHost(req.body.socket_address, req.body.uuid));
-                } catch (e) {
-                    if (e instanceof ClientIdAlreadyLinked) {
-                        res.status(httpStatus.BAD_REQUEST).json({
-                            error: 'Client ID already linked.',
-                        });
-                    } else {
-                        throw e;
+        logger.info(`${this.apiVersion}/${this.connectPath}`);
+
+        // Connect endpoint.
+        this.httpServer.addPostHandler(
+            `/${SpammerHostServer.apiVersion}/${SpammerHostServer.connectPath}`,
+            (req, res) => {
+                if (!req.body.hasOwnProperty('uuid')) {
+                    res.status(httpStatus.BAD_REQUEST).json({
+                        error: 'Field `uuid` is required.',
+                    });
+                } else if (!req.body.hasOwnProperty('socket_address')) {
+                    res.status(httpStatus.BAD_REQUEST).json({
+                        error: 'Field `socket_address` is required.',
+                    });
+                } else {
+                    try {
+                        spammerHostManager.addRemoteHost(new RemoteHost(req.body.socket_address, req.body.uuid));
+                    } catch (e) {
+                        if (e instanceof ClientIdAlreadyLinked) {
+                            res.status(httpStatus.BAD_REQUEST).json({
+                                error: 'Client ID already linked.',
+                            });
+                        } else {
+                            throw e;
+                        }
                     }
                 }
+                res.end();
             }
-            res.end();
-        });
+        );
+
+        /**
+         * Converts a map of remote hosts into a JSON.
+         * @param {Map} remoteHosts
+         */
+        function remoteHostsToJson(remoteHosts) {
+            const clientObjs = [];
+            remoteHosts.forEach(value => {
+                clientObjs.push(value);
+            });
+            return { clients: clientObjs };
+        }
+
+        // Clients endpoint.
+        this.httpServer.addGetHandler(
+            `/${SpammerHostServer.apiVersion}/${SpammerHostServer.clientPath}`,
+            (_req, res) => {
+                res.status(httpStatus.OK)
+                    .json(remoteHostsToJson(spammerHostManager.remoteHosts))
+                    .end();
+            }
+        );
     }
     /**
      * Close the Spammer server.
@@ -56,5 +81,6 @@ class SpammerHostServer {
 
 SpammerHostServer.apiVersion = 'v1';
 SpammerHostServer.connectPath = 'connect';
+SpammerHostServer.clientPath = 'clients';
 
 module.exports = SpammerHostServer;
