@@ -1,0 +1,27 @@
+frame determineSpammerClients (config) : spammerClients
+
+actor User
+
+participant SpammerHostManager
+participant SpammerClient spammerClient
+
+User -> SpammerHostManager: determineSpammerClients (config)
+activate SpammerHostManager
+
+loop activeSpammerClients
+
+SpammerHostManager->SpammerClient spammerClient: isActive ()
+activate SpammerClient spammerClient
+
+SpammerClient spammerClient->SpammerHostManager: isActive
+deactivate SpammerClient spammerClient
+
+opt isActive = true
+
+SpammerHostManager->SpammerHostManager: addClientToList ()
+
+end 
+
+end
+
+SpammerHostManager->User:spammerClients

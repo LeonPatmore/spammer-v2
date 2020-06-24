@@ -1,24 +1,28 @@
 const axios = require('axios');
 
 class HttpClient {
-    async get(url, responseHandler) {
+    async get(url) {
         return axios({
             method: 'get',
             url: url,
         }).then(res => {
-            return this.responseInStandardFormat(res);
+            return this._responseInStandardFormat(res);
         });
     }
-    async post(url, body, responseHandler) {
+    async post(url, body) {
         return axios({
             method: 'post',
             url: url,
             data: body,
         }).then(res => {
-            return this.responseInStandardFormat(res);
+            return this._responseInStandardFormat(res);
         });
     }
-    responseInStandardFormat(res) {
+    /**
+     * The HTTP response in a standard format.
+     * @param {Object} res
+     */
+    _responseInStandardFormat(res) {
         return { code: res.status, body: res.data, headers: res.headers };
     }
 }

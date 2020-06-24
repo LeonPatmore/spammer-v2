@@ -16,6 +16,8 @@ class ClientIdAlreadyLinked extends Error {
     }
 }
 
+class NotEnoughClients extends Error {}
+
 class SpammerHostManager {
     constructor() {
         this.hostId = uuid();
@@ -44,6 +46,20 @@ class SpammerHostManager {
     checkClientExists(clientUuid) {
         return this.remoteHosts.has(clientUuid);
     }
+
+    startPerformanceTest(config) {}
+
+    async _determineSpammerClients(config) {
+        for (const remoteHost of this.remoteHosts) {
+            const result = await this.httpClient.get(`http://${remoteHost.socketAddress}/v1/internal/performance`);
+            logger.info(result);
+        }
+        if (this.remoteHosts.size <= 0) {
+            throw new NotEnoughClients();
+        }
+    }
+
+    _sendSpammerClientRequest(config, remoteHost) {}
 }
 
 module.exports = { SpammerHostManager, ClientIdAlreadyLinked };

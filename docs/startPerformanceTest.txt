@@ -11,10 +11,10 @@ activate SpammerHostServer
 SpammerHostServer->SpammerHostManager:startPerformanceTest (config)
 activate SpammerHostManager
 
-SpammerHostManager->SpammerHostManager: determineSpammerClients ()
+ref over SpammerHostManager: determineSpammerClients (config) : spammerClients
 activate SpammerHostManager
 
-alt clients < 0
+alt clients <= 0
 
 SpammerHostManager-->SpammerHostServer: Not Enough Clients
 SpammerHostServer-->User:400 Bad Request

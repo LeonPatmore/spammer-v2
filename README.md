@@ -63,3 +63,7 @@ thresholds: {
 ### Start Performance Test
 
 ![Start Performance Test sequence diagram.](docs/startPerformanceTest.png)
+
+### Determine Spammer Clients
+
+![Determine Spammer Clients sequence diagram.](docs/determineSpammerClients.png)
