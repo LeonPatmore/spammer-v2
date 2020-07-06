@@ -2,6 +2,8 @@ const { SpammerFollower, FollowerAlreadyRunningPerformance } = require('./spamme
 const httpStatus = require('http-status-codes');
 const HttpServer = require('../../server/http-server');
 
+// TODO: Express error handling.
+
 class SpammerFollowerHttp extends SpammerFollower {
     /**
      * Create a Spammer follower instance exposed via HTTP.
@@ -14,7 +16,7 @@ class SpammerFollowerHttp extends SpammerFollower {
         super(initialLeaderSocketAddress, initialLeaderVersion);
         this.httpServer = new HttpServer(hostname, port);
 
-        this.getRunHandler = res => {
+        const getRunHandler = (_, res) => {
             if (this.hasRun()) {
                 res.json({ run_id: this.performanceRunId });
             } else {
@@ -44,25 +46,25 @@ class SpammerFollowerHttp extends SpammerFollower {
             res.end();
         };
 
-        const addLeaderHandler = (req, res) => {
+        const addLeaderHandler = async (req, res, next) => {
             try {
                 if (req.body.hasOwnProperty('socket_address')) {
-                    this.connectToLeader(req.body.socket_address, req.body.version);
+                    await this.connectToLeader(req.body.socket_address, req.body.version);
                 } else {
-                    res.stauts(httpStatus.BAD_REQUEST).json({
+                    res.status(httpStatus.BAD_REQUEST).json({
                         error: 'Field `socket_address` is required.',
                     });
                 }
             } catch (e) {
-                throw e;
+                return next(e);
             }
             res.end();
         };
 
-        this.httpServer.addGetHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, this.getRunHandler);
+        this.httpServer.addGetHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, getRunHandler);
         this.httpServer.addPostHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, postRunHandler);
         this.httpServer.addPostHandler(
-            `/${SpammerFollower.version}/${SpammerFollowerHttp.leader}/${SpammerFollowerHttp.addPath}`,
+            `/${SpammerFollower.version}/${SpammerFollowerHttp.leaderPath}`,
             addLeaderHandler
         );
     }
@@ -77,6 +79,5 @@ class SpammerFollowerHttp extends SpammerFollower {
 
 SpammerFollowerHttp.runPath = 'run';
 SpammerFollowerHttp.leaderPath = 'leader';
-SpammerFollowerHttp.addPath = 'add';
 
 module.exports = SpammerFollowerHttp;

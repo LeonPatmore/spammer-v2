@@ -12,6 +12,7 @@ class CannotConnectToLeader extends Error {
 
 class FollowerAlreadyRunningPerformance extends Error {
     constructor(performanceRunId) {
+        super();
         this.performanceRunId = performanceRunId;
     }
 }
@@ -36,7 +37,7 @@ class SpammerFollower {
      * @param {string} leaderSocketAddress  The socket address of the Spammer leader.
      * @param {string} version              The version of the Spammer leader.
      */
-    connectToLeader(leaderSocketAddress, version) {
+    async connectToLeader(leaderSocketAddress, version) {
         if (!version) {
             // If not leader version is given, default to the version of the follower.
             logger.debug(`No version has been provided, defaulting to version [] ${SpammerFollower.version} ]`);
@@ -48,7 +49,7 @@ class SpammerFollower {
         if (!version in spammerLeaderClients) {
             throw new Error(`No known client for leader version [ ${version} ]`);
         }
-        spammerLeaderClients[version].connectToLeader(this.uuid, leaderSocketAddress);
+        await spammerLeaderClients[version].connectToLeader(this.uuid, leaderSocketAddress);
     }
 
     /**

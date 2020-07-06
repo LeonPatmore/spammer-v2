@@ -9,7 +9,7 @@ class SpammerLeaderClientV1 {
      * @param {string} socketAddress    The socket address of the follower.
      */
     static async connectToLeader(uuid, socketAddress) {
-        httpClient
+        await httpClient
             .post('/v1/connect', {
                 uuid: uuid,
                 socket_address: socketAddress,
