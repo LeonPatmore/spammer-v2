@@ -13,7 +13,7 @@ class SpammerClientV1 extends RemoteHost {
     }
 
     /**
-     * Returns true if the client is ready to receive a request, else false.
+     * Returns true if the follower is ready to receive a request, else false.
      */
     async isReady() {
         const res = await this.httpClient.get(`/v1/${this.performancePath}`);

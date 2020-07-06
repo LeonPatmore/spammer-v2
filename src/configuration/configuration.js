@@ -7,6 +7,28 @@ const config = convict({
         default: 5435,
         env: 'SPAMMER_PORT',
     },
+    host: {
+        doc: 'Host of the spammer server.',
+        format: 'ipaddress',
+        default: '0.0.0.0',
+        env: 'SPAMMER_HOST',
+    },
+    spammerType: {
+        doc: 'The type of spammer.',
+        format: ['leader', 'follower'],
+        default: 'follower',
+        env: 'SPAMMER_TYPE',
+    },
+    initalLeaderSocketAddress: {
+        doc: '[Client Only, Optional] The initial leader socket address to connect to.',
+        format: 'String',
+        env: 'INIT_LEADER_SOCKET_ADDRESS',
+    },
+    initialLeaderVersion: {
+        doc: '[Client Only, Optional] The initial leader socket version.',
+        format: 'String',
+        env: 'INIT_LEADER_SOCKET_VERSION',
+    },
 });
 
 config.validate({ allowed: 'strict' });
