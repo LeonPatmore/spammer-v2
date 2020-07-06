@@ -67,3 +67,9 @@ thresholds: {
 ### Determine Spammer Clients
 
 ![Determine Spammer Clients sequence diagram.](docs/determineSpammerClients.png)
+
+## API
+
+### Client
+
+

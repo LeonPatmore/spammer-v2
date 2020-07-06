@@ -1,4 +1,4 @@
-const ClusterClientHttp = require('../../../cluster/client/cluster-client-http');
+const ClusterClientHttp = require('../../../cluster/follower/cluster-client-http');
 const HttpServer = require('../../../server/http-server');
 jest.mock('../../../server/http-server');
 

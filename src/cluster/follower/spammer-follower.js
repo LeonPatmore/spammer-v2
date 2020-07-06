@@ -2,18 +2,16 @@ const httpClient = require('../../http/client').getInstance();
 const spammerLeaderClients = require('./leader-clients/spammer-leader-client');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../logger/application-logger');
+const { HttpAwareError } = require('../spammer-http-error-handler');
+const httpStatus = require('http-status-codes');
 
-class CannotConnectToLeader extends Error {
-    constructor(leaderUrl) {
-        this.leaderUrl = leaderUrl;
-        this.message = `Can not connect to Spammer leader with URL ${leaderUrl}`;
-    }
-}
-
-class FollowerAlreadyRunningPerformance extends Error {
+class FollowerAlreadyRunningPerformance extends HttpAwareError {
     constructor(performanceRunId) {
-        super();
+        super(`Performance test already running with ID [ ${performanceRunId} ]`);
         this.performanceRunId = performanceRunId;
+    }
+    getHttpCode() {
+        return httpStatus.BAD_REQUEST;
     }
 }
 
@@ -30,26 +28,6 @@ class SpammerFollower {
         if (this.initialLeaderSocketAddress != null) {
             this.connectToLeader(initialLeaderSocketAddress, initialLeaderVersion);
         }
-    }
-
-    /**
-     * Connect to a Spammer leader.
-     * @param {string} leaderSocketAddress  The socket address of the Spammer leader.
-     * @param {string} version              The version of the Spammer leader.
-     */
-    async connectToLeader(leaderSocketAddress, version) {
-        if (!version) {
-            // If not leader version is given, default to the version of the follower.
-            logger.debug(`No version has been provided, defaulting to version [] ${SpammerFollower.version} ]`);
-            version = SpammerFollower.version;
-        }
-        logger.info(
-            `Trying to connect to leader with socket address [ ${leaderSocketAddress} ] and version [ ${version} ]`
-        );
-        if (!version in spammerLeaderClients) {
-            throw new Error(`No known client for leader version [ ${version} ]`);
-        }
-        await spammerLeaderClients[version].connectToLeader(this.uuid, leaderSocketAddress);
     }
 
     /**
@@ -73,4 +51,4 @@ class SpammerFollower {
 
 SpammerFollower.version = 'v1';
 
-module.exports = { SpammerFollower, FollowerAlreadyRunningPerformance, CannotConnectToLeader };
+module.exports = { SpammerFollower, FollowerAlreadyRunningPerformance };

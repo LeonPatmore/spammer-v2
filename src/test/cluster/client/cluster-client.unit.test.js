@@ -1,4 +1,4 @@
-const { ClusterClient, ClientAlreadyLinkedError } = require('../../../cluster/client/cluster-client');
+const { ClusterClient, ClientAlreadyLinkedError } = require('../../../cluster/follower/cluster-client');
 
 it('Ensure that link host throws exception when client is already linked', () => {
     const myClient = new ClusterClient();

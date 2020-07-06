@@ -1,8 +1,7 @@
 const { SpammerFollower, FollowerAlreadyRunningPerformance } = require('./spammer-follower');
 const httpStatus = require('http-status-codes');
 const HttpServer = require('../../server/http-server');
-
-// TODO: Express error handling.
+const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
 
 class SpammerFollowerHttp extends SpammerFollower {
     /**
@@ -25,48 +24,24 @@ class SpammerFollowerHttp extends SpammerFollower {
             res.end();
         };
 
-        const postRunHandler = (req, res) => {
+        const postRunHandler = (req, res, next) => {
             try {
                 if (req.body.hasOwnProperty('run_id')) {
                     this.startRun(req.body);
                 } else {
-                    res.status(httpStatus.BAD_REQUEST).json({
-                        error: 'Field `run_id` is required.',
-                    });
+                    throw new InvalidParamErrorBuilder()
+                        .withInvalidParam('run_id', InvalidParamErrorBuilder.missing)
+                        .build();
                 }
             } catch (e) {
-                if (e instanceof FollowerAlreadyRunningPerformance) {
-                    res.status(httpStatus.BAD_REQUEST).json({
-                        error: `Follower is already running a performance test with id ${this.performanceRunId}!`,
-                    });
-                } else {
-                    throw e;
-                }
-            }
-            res.end();
-        };
-
-        const addLeaderHandler = async (req, res, next) => {
-            try {
-                if (req.body.hasOwnProperty('socket_address')) {
-                    await this.connectToLeader(req.body.socket_address, req.body.version);
-                } else {
-                    res.status(httpStatus.BAD_REQUEST).json({
-                        error: 'Field `socket_address` is required.',
-                    });
-                }
-            } catch (e) {
-                return next(e);
+                next(e);
             }
             res.end();
         };
 
         this.httpServer.addGetHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, getRunHandler);
         this.httpServer.addPostHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, postRunHandler);
-        this.httpServer.addPostHandler(
-            `/${SpammerFollower.version}/${SpammerFollowerHttp.leaderPath}`,
-            addLeaderHandler
-        );
+        this.httpServer.addErrorHandler(spammerErrorHandler);
     }
 
     /**
