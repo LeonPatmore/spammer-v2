@@ -2,10 +2,10 @@
  * A class which represents the server of a cluster host.
  */
 
-const HttpServer = require('./../../server/http-server');
+const HttpServer = require('../../server/http-server');
 const RemoteHost = require('./remote-host');
 const httpStatus = require('http-status-codes');
-const { SpammerHostManager, ClientIdAlreadyLinked } = require('./spammer-host-manager');
+const { SpammerHostManager, ClientIdAlreadyLinked } = require('./spammer-leader-manager');
 const logger = require('../../logger/application-logger');
 
 class SpammerHostServer {

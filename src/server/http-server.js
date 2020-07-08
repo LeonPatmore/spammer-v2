@@ -1,6 +1,7 @@
 const express = require('express');
 const expressPinoLogger = require('express-pino-logger');
 const logger = require('../logger/application-logger');
+const expressPing = require('express-ping');
 
 class HttpServer {
     /**
@@ -14,22 +15,27 @@ class HttpServer {
         this.express = express();
         this.express.use(express.json());
         this.express.use(expressPinoLogger());
+        this.express.use(expressPing.ping());
         this.httpServer = this.express.listen(port, hostname);
     }
 
+    addErrorHandler(errorHandler) {
+        this.express.use(errorHandler);
+    }
+
     /**
-     *
-     * @param {*} path
-     * @param {*} handlerFunction
+     * Add a get handler to the server.
+     * @param {string} path
+     * @param {Function} handlerFunction
      */
     addGetHandler(path, handlerFunction) {
         this.express.get(path, handlerFunction);
     }
 
-    /**
-     *
-     * @param {*} path
-     * @param {*} handlerFunction
+    /**1
+     * Add a post handler to the server.
+     * @param {string} path
+     * @param {Function} handlerFunction
      */
     addPostHandler(path, handlerFunction) {
         this.express.post(path, handlerFunction);

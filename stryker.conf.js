@@ -7,7 +7,7 @@ module.exports = function(config) {
         testRunner: 'jest',
         coverageAnalysis: 'off',
         jest: {
-            enableFindRelatedTests: true,
+            enableFindRelatedTests: false,
         },
         thresholds: {
             high: 80,

@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+let instance = null;
+
 class HttpClient {
     async get(url) {
         return axios({
@@ -9,6 +11,7 @@ class HttpClient {
             return this._responseInStandardFormat(res);
         });
     }
+
     async post(url, body) {
         return axios({
             method: 'post',
@@ -18,12 +21,23 @@ class HttpClient {
             return this._responseInStandardFormat(res);
         });
     }
+
     /**
      * The HTTP response in a standard format.
      * @param {Object} res
      */
     _responseInStandardFormat(res) {
         return { code: res.status, body: res.data, headers: res.headers };
+    }
+
+    /**
+     * @returns {HttpClient}
+     */
+    static getInstance() {
+        if (!instance) {
+            instance = new HttpClient();
+        }
+        return instance;
     }
 }
 
