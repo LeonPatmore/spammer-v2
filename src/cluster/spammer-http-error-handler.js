@@ -47,7 +47,7 @@ class InvalidParamError extends HttpAwareError {
 InvalidParamErrorBuilder.missing = 'parameter missing';
 InvalidParamErrorBuilder.unsupportedValue = 'unsupported value';
 
-function spammerErrorHandler(err, _, res, _) {
+function spammerErrorHandler(err, _0, res, _1) {
     if (err instanceof HttpAwareError) {
         res.status(err.getHttpCode()).json({ errors: err.getErrorJson() });
     } else {

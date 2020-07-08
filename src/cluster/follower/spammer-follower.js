@@ -1,5 +1,3 @@
-const httpClient = require('../../http/client').getInstance();
-const spammerLeaderClients = require('./leader-clients/spammer-leader-client');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../logger/application-logger');
 const { HttpAwareError } = require('../spammer-http-error-handler');
@@ -18,16 +16,11 @@ class FollowerAlreadyRunningPerformance extends HttpAwareError {
 class SpammerFollower {
     /**
      * Construct an instance of a Spammer follower.
-     * @param {string} initialLeaderSocketAddress   If provided, follower will try to make an initial connection to the Spammer host.
-     * @param {string} initialLeaderVersion         If provided, will use this version as the inital leader's version. If initialLeaderSocketAddress is not provided, then this variable is not used.
      */
-    constructor(initialLeaderSocketAddress, initialLeaderVersion) {
+    constructor() {
         this.performanceRunId = null;
         this.uuid = uuidv4();
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
-        if (this.initialLeaderSocketAddress != null) {
-            this.connectToLeader(initialLeaderSocketAddress, initialLeaderVersion);
-        }
     }
 
     /**
@@ -46,6 +39,7 @@ class SpammerFollower {
             throw new FollowerAlreadyRunningPerformance(this.performanceRunId);
         }
         this.performanceRunId = runConfig.run_id;
+        // TODO Start run
     }
 }
 

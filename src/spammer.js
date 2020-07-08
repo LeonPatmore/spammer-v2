@@ -17,14 +17,7 @@ class Spammer {
          * Load as a follower.
          */
         const loadSpammerFollower = () => {
-            const initialLeaderSocketAddress = configuration.get('initalLeaderSocketAddress');
-            const initialLeaderVersion = configuration.get('initialLeaderVersion');
-            const spammerFollowerHttp = new SpammerFollowerHttp(
-                host,
-                port,
-                initialLeaderSocketAddress,
-                initialLeaderVersion
-            );
+            const spammerFollowerHttp = new SpammerFollowerHttp(host, port);
             this.spammerFollowerHttp = spammerFollowerHttp;
         };
 
@@ -33,6 +26,14 @@ class Spammer {
         } else {
             logger.info('Loading Spammer as a follower!');
             loadSpammerFollower();
+        }
+    }
+    /**
+     * Close the Spammer, closing any dependencies it may have.
+     */
+    close() {
+        if (this.hasOwnProperty('spammerFollowerHttp')) {
+            this.spammerFollowerHttp.close();
         }
     }
 }

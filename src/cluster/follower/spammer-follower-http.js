@@ -1,4 +1,4 @@
-const { SpammerFollower, FollowerAlreadyRunningPerformance } = require('./spammer-follower');
+const { SpammerFollower } = require('./spammer-follower');
 const httpStatus = require('http-status-codes');
 const HttpServer = require('../../server/http-server');
 const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
@@ -6,13 +6,11 @@ const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-ht
 class SpammerFollowerHttp extends SpammerFollower {
     /**
      * Create a Spammer follower instance exposed via HTTP.
-     * @param {String}     hostname                     Hostname to bind the server to.
-     * @param {Int32Array} port                         Port to bind the server to.
-     * @param {string}     initialLeaderSocketAddress   If provided, follower will try to make an initial connection to the Spammer host.
-     * @param {string}     initialLeaderVersion         If provided, will use this version as the inital leader's version. If initialLeaderSocketAddress is not provided, then this variable is not used.
+     * @param {String}     hostname Hostname to bind the server to.
+     * @param {Int32Array} port     Port to bind the server to.
      */
-    constructor(hostname, port, initialLeaderSocketAddress, initialLeaderVersion) {
-        super(initialLeaderSocketAddress, initialLeaderVersion);
+    constructor(hostname, port) {
+        super();
         this.httpServer = new HttpServer(hostname, port);
 
         const getRunHandler = (_, res) => {
@@ -53,6 +51,5 @@ class SpammerFollowerHttp extends SpammerFollower {
 }
 
 SpammerFollowerHttp.runPath = 'run';
-SpammerFollowerHttp.leaderPath = 'leader';
 
 module.exports = SpammerFollowerHttp;
