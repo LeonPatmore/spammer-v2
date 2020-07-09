@@ -1,5 +1,6 @@
 const configuration = require('./configuration/configuration');
 const SpammerFollowerHttp = require('./cluster/follower/spammer-follower-http');
+const SpammerLeaderHttp = require('./cluster/leader/spammer-leader-http');
 const logger = require('./logger/application-logger');
 
 class Spammer {
@@ -21,8 +22,14 @@ class Spammer {
             this.spammerFollowerHttp = spammerFollowerHttp;
         };
 
+        const loadSpammerLeader = () => {
+            const spammerLeaderHttp = new SpammerLeaderHttp(host, port);
+            this.spammerLeaderHttp = spammerLeaderHttp;
+        };
+
         if (leaderOrFollower == 'leader') {
             logger.info('Loading Spammer as a leader!');
+            loadSpammerLeader();
         } else {
             logger.info('Loading Spammer as a follower!');
             loadSpammerFollower();

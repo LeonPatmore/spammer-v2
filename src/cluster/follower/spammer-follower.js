@@ -13,6 +13,12 @@ class FollowerAlreadyRunningPerformance extends HttpAwareError {
     }
 }
 
+class RunIdIsNullError extends Error {
+    constructor() {
+        super('The run ID must not be null!');
+    }
+}
+
 class SpammerFollower {
     /**
      * Construct an instance of a Spammer follower.
@@ -32,17 +38,18 @@ class SpammerFollower {
 
     /**
      * Starts a performance run given the config.
-     * @param {object} runConfig    The run configuration object.
+     * @param {string} runId    The run id.
      */
-    startRun(runConfig) {
+    startRun(runId) {
+        if (!runId) throw new RunIdIsNullError();
         if (this.hasRun()) {
             throw new FollowerAlreadyRunningPerformance(this.performanceRunId);
         }
-        this.performanceRunId = runConfig.run_id;
+        this.performanceRunId = runId;
         // TODO Start run
     }
 }
 
 SpammerFollower.version = 'v1';
 
-module.exports = { SpammerFollower, FollowerAlreadyRunningPerformance };
+module.exports = { SpammerFollower, FollowerAlreadyRunningPerformance, RunIdIsNullError };

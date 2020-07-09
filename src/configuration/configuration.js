@@ -16,7 +16,7 @@ const config = convict({
     spammerType: {
         doc: 'The type of spammer.',
         format: ['leader', 'follower'],
-        default: 'follower',
+        default: 'leader',
         env: 'SPAMMER_TYPE',
     },
 });

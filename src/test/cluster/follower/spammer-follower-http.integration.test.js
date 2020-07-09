@@ -58,4 +58,10 @@ describe('API Tests', () => {
         const response = await sendRequest('POST', 'v1/run', { runId: 'some-id' });
         expect(response.status).toEqual(400);
     });
+
+    it('Test post connect endpoint WHEN requests THEN returns ok response with uuid', async () => {
+        const response = await sendRequest('POST', 'v1/connect');
+        expect(response.status).toEqual(200);
+        expect(response.data.uuid).toEqual(spammerFollowerInstance.uuid);
+    });
 });
