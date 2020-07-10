@@ -64,10 +64,12 @@ class SpammerLeaderHttp extends SpammerLeader {
 
         this.httpServer.addErrorHandler(spammerErrorHandler);
     }
+
     /**
-     * Close the Spammer server.
+     * Close all resources.
      */
-    closeServer() {
+    close() {
+        super.close();
         this.httpServer.closeServer();
     }
 }

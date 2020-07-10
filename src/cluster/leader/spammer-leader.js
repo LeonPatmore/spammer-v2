@@ -143,6 +143,8 @@ class SpammerLeader {
     }
 
     _sendSpammerClientRequest(config, remoteHost) {}
+
+    close() {}
 }
 
 SpammerLeader.defaultInitialPerformanceDelayMs = 10000;

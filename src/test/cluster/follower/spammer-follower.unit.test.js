@@ -12,7 +12,7 @@ describe('Performance run tests', () => {
         }).toThrow(FollowerAlreadyRunningPerformance);
     });
     it('Ensure that startRun sets the performance run ID to the correct value', () => {
-        spammerFollower.startRun({ run_id: 'some-id' });
+        spammerFollower.startRun('some-id');
         expect(spammerFollower.performanceRunId).toEqual('some-id');
     });
 });
