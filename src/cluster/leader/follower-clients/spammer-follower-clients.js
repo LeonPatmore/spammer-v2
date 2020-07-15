@@ -26,11 +26,12 @@ class SpammerFollowerClientV1 {
             else throw new UnexpectedSpammerClientResponse();
         });
     }
-    static async startPerformanceRun(socketAddress, runId, delayMs) {
+    static async startPerformanceRun(socketAddress, runId, delayMs, config) {
         return await httpClient
             .post(`http://${socketAddress}/v1/run`, {
                 run_id: runId,
                 delay_ms: delayMs,
+                config: config,
             })
             .then(result => {
                 if (result.code != httpCodes.OK) throw new UnexpectedSpammerClientResponse();

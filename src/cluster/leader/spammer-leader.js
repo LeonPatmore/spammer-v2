@@ -3,151 +3,128 @@
  */
 
 const logger = require('../../logger/application-logger');
-const httpStatus = require('http-status-codes');
-const uuid = require('uuid').v4;
+const { v4: uuidv4 } = require('uuid');
 const { HttpAwareError } = require('../spammer-http-error-handler');
 const spammerFollowerClients = require('./follower-clients/spammer-follower-clients');
-
-class FollowerIdAlreadyLinked extends HttpAwareError {
-    /**
-     * @param {string} linkedId  The ID of the client which is already linked.
-     */
-    constructor(linkedId) {
-        super(`Follower with ID [ ${linkedId} ] is already linked!`);
-        this.linkedId = linkedId;
-    }
-
-    getHttpCode() {
-        return httpStatus.BAD_REQUEST;
-    }
-}
-
-class FollowerVersionNotSupportedError extends HttpAwareError {
-    /**
-     * @param {string} version  The version of Spammer follower which is not supported.
-     */
-    constructor(version) {
-        super(`Follower version [ ${version} ] is not supported!`);
-        this.version = version;
-    }
-
-    getHttpCode() {
-        return httpStatus.BAD_REQUEST;
-    }
-}
-
-class NotEnoughFollowers extends HttpAwareError {
-    constructor() {
-        super('Not enough followers to run performance test!');
-    }
-    getHttpCode() {
-        return httpStatus.BAD_REQUEST;
-    }
-}
+const { PerformanceTest, performanceTestStatus } = require('./performance-test');
+const { FollowerJobRepository } = require('./follower-job-repository');
 
 class SpammerLeader {
     constructor() {
-        this.hostId = uuid();
-        logger.info(`Starting cluster host with id [ ${this.hostId} ]`);
+        this.uuid = uuidv4();
+        logger.info(`Starting cluster host with id [ ${this.uuid} ]`);
+        this.followerJobRepository = new FollowerJobRepository();
         this.connectedFollowers = new Map();
+        this.performanceTests = [];
+        setInterval(() => this._managePerformanceTests(), 5000);
     }
 
-    /**
-     * Validates that the given public URL is a Spammer client.
-     * @param {string} socketAddress
-     * @param {string} version
-     */
-    async _validatePublicUrl(socketAddress, version) {
-        if (!spammerFollowerClients.hasOwnProperty(version)) {
-            throw new FollowerVersionNotSupportedError(version);
-        }
-        const followerClient = spammerFollowerClients[version];
-        const uuid = await followerClient.connectToFollower(socketAddress);
-        return uuid;
-    }
-
-    /**
-     * Add a Spammer follower.
-     * @param {string} socketAddress    The socket address to connect to.
-     */
-    async addFollower(socketAddress, version) {
-        const validVersion = version || SpammerLeader.version;
-        const uuid = await this._validatePublicUrl(socketAddress, validVersion);
-        logger.info(`Validated follower with UUID [ ${uuid} ]`);
-        if (this._checkFollowerConnected(uuid)) {
-            throw new FollowerIdAlreadyLinked(uuid);
-        }
-        this.connectedFollowers.set(uuid, { socketAddress: socketAddress, version: validVersion, uuid: uuid });
-    }
-
-    /**
-     * Checks if this Spammer follower is already connected.
-     * @param {string} followerId   The unique ID of the follower.
-     */
-    _checkFollowerConnected(followerId) {
-        return this.connectedFollowers.has(followerId);
-    }
-
-    /**
-     * Start a performance test with the given configuration.
-     * @param {object} config
-     */
-    async startPerformanceTest(config) {
-        const followers = await this._determineSpammerFollowers(config);
-        const runId = uuid();
-        const configuredFollowers = [];
-        try {
-            for (let follower of followers) {
-                await spammerFollowerClients[follower.version].startPerformanceRun(
-                    follower.socketAddress,
-                    runId,
-                    SpammerLeader.defaultInitialPerformanceDelayMs
-                );
-                configuredFollowers.push(follower);
+    async _managePerformanceTests() {
+        if (this.performanceTests.length <= 0) return;
+        const currentPerformanceTest = this.performanceTests[0];
+        if (
+            currentPerformanceTest.status == performanceTestStatus.IN_QUEUE ||
+            currentPerformanceTest.status == performanceTestStatus.WAITING_FOR_ENOUGH_FOLLOWERS
+        ) {
+            logger.info(`Picking up performance test [ ${currentPerformanceTest.uuid} ]`);
+            const availableFollowers = this._getAvailableFollowers();
+            if (availableFollowers.length <= 0) {
+                // logger.info(`Waiting for at-least one available follower!`);
+                currentPerformanceTest.status = performanceTestStatus.WAITING_FOR_ENOUGH_FOLLOWERS;
+                return;
             }
-        } catch (e) {
-            // Invalidate previous requests.
-            for (let follower of configuredFollowers) {
-                try {
-                    await spammerFollowerClients[follower.version].stopPerformanceRun(follower.socketAddress, runId);
-                } catch (stopError) {
-                    logger.warn(
-                        `Error while trying to invalidate performance run [ ${runId} ] for follower [ ${follower.uuid} ]. Error was [ ${stopError.message} ]`
-                    );
-                }
-            }
-            throw e;
+            this._assignJobsToFollowers(currentPerformanceTest, availableFollowers);
+            currentPerformanceTest.status = performanceTestStatus.WAITING_FOR_FOLLOWERS;
+        } else if (currentPerformanceTest.status == performanceTestStatus.WAITING_FOR_FOLLOWERS) {
         }
-        logger.info('Performance test has been successfully started!');
     }
 
-    async _determineSpammerFollowers(config) {
-        const freeFollowers = await this._getFreeFollowers();
-        if (freeFollowers.length <= 0) {
-            throw new NotEnoughFollowers();
+    _assignJobsToFollowers(performanceTest, availableFollowers) {
+        const generatedJobs = [];
+        for (const follower of availableFollowers) {
+            const job = performanceTest.generateAndAttachPlanJob();
+            generatedJobs.push({
+                followerUuid: follower.uuid,
+                job: job,
+            });
         }
-        logger.info(`Founder [ ${freeFollowers.length} ] free followers!`);
-        return freeFollowers;
+        for (const job of generatedJobs) {
+            this.followerJobRepository.addJob(job.followerUuid, job.job);
+        }
     }
 
-    async _getFreeFollowers() {
-        const freeFollowers = [];
+    /**
+     * Get a list of the known available followers.
+     */
+    _getAvailableFollowers() {
+        const followers = [];
+        for (let follower of this.connectedFollowers.values()) {
+            if (follower.available) followers.push(follower);
+        }
+        return followers;
+    }
+
+    /**
+     * Add a performance test with the given configuration to the queue.
+     * @param {string} config
+     */
+    addPerformanceTestToQueue(config) {
+        const performanceTest = new PerformanceTest(config);
+        this.performanceTests.push(performanceTest);
+        return performanceTest.uuid;
+    }
+
+    /**
+     * Update a follower.
+     * @param {string} followerUuid The ID of the follower.
+     * @param {string} status       The status of the follower.
+     * @param {string} available    The availability of the follower, indicating if the follower can run a performance test.
+     */
+    updateFollower(followerUuid, status, available) {
+        // Get active job.
+        const activeJob = this.followerJobRepository.getActiveJobForFollower(followerUuid);
+        // Set follower information.
+        this.connectedFollowers.set(followerUuid, {
+            uuid: followerUuid,
+            available: available,
+            status: status,
+            lastUpdate: new Date(),
+            job: activeJob,
+        });
+        return activeJob;
+    }
+
+    handleJobUpdate(followerUuid, jobUuid, jobStatus) {
+        logger.debug(
+            `Handling job update [ ${jobUuid} ] with status [ ${jobStatus} ] from follower [ ${followerUuid} ]`
+        );
+        const job = this.followerJobRepository.getJobWithId(followerUuid, jobUuid);
+        job.changeStatus(jobStatus);
+        logger.info(`Job with ID [ ${jobUuid} ] has updated with status [ ${jobStatus} ]`);
+    }
+
+    /**
+     * Get a list of clients and the relevant information.
+     */
+    async followersToJson() {
+        const followers = [];
         for (const follower of this.connectedFollowers.values()) {
-            const isRunning = await spammerFollowerClients[follower.version].runningPerformanceRun(
-                follower.socketAddress
-            );
-            logger.debug(`Follower [ ${follower.uuid} ] running status is [ ${isRunning} ]`);
-            if (!isRunning) freeFollowers.push(follower);
+            let isRunning = 'unknown';
+            try {
+                isRunning = await spammerFollowerClients[follower.version].runningPerformanceRun(
+                    follower.socketAddress
+                );
+            } catch (e) {
+                logger.warn(`Cannot determine if follower [ ${follower.uuid} ] is running!`);
+            }
+            followers.push(Object.assign({ running: isRunning }, follower));
         }
-        return freeFollowers;
+        return followers;
     }
-
-    _sendSpammerClientRequest(config, remoteHost) {}
 
     close() {}
 }
 
-SpammerLeader.defaultInitialPerformanceDelayMs = 10000;
 SpammerLeader.version = 'v1';
 
-module.exports = { SpammerLeader, FollowerIdAlreadyLinked };
+module.exports = { SpammerLeader };

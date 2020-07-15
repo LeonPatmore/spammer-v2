@@ -11,54 +11,70 @@ class SpammerLeaderHttp extends SpammerLeader {
      */
     constructor(hostname, port) {
         super();
-        this.httpServer = new HttpServer(hostname, port);
+        this.httpServer = new HttpServer(hostname, port, ['/v1/follower/status']);
 
-        // Connect endpoint.
-        this.httpServer.addPostHandler(
-            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.connectPath}`,
-            async (req, res, next) => {
-                try {
-                    if (!req.body.hasOwnProperty('socket_address')) {
-                        throw new InvalidParamErrorBuilder()
-                            .withInvalidParam('socket_address', InvalidParamErrorBuilder.missing)
-                            .build();
-                    }
-                    await this.addFollower(req.body.socket_address, req.body.version);
-                } catch (e) {
-                    next(e);
-                }
-                res.end();
+        this.httpServer.addGetHandler(
+            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.clientPath}`,
+            async (_, res) => {
+                res.status(httpStatus.OK)
+                    .json({ clients: await this.followersToJson() })
+                    .end();
             }
         );
 
-        /**
-         * Converts a map of remote hosts into a JSON.
-         * @param {Map} remoteHosts
-         */
-        function remoteHostsToJson(remoteHosts) {
-            const clientObjs = [];
-            remoteHosts.forEach(value => {
-                clientObjs.push(value);
-            });
-            return { clients: clientObjs };
-        }
-
-        // Clients endpoint.
-        this.httpServer.addGetHandler(`/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.clientPath}`, (_, res) => {
-            res.status(httpStatus.OK)
-                .json(remoteHostsToJson(this.connectedFollowers))
-                .end();
-        });
-
         this.httpServer.addPostHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performancePath}`,
-            async (req, res, next) => {
+            (req, res) => {
+                const testUuid = this.addPerformanceTestToQueue(req.body);
+                res.json({
+                    test_uuid: testUuid,
+                }).end();
+            }
+        );
+
+        this.httpServer.addPutHandler(
+            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.followerStatusPath}`,
+            (req, res) => {
+                const invalidParamErrorBuilder = new InvalidParamErrorBuilder();
+                if (!req.body.hasOwnProperty('uuid'))
+                    invalidParamErrorBuilder.withInvalidParam('uuid', InvalidParamErrorBuilder.missing);
+                if (!req.body.hasOwnProperty('status'))
+                    invalidParamErrorBuilder.withInvalidParam('status', InvalidParamErrorBuilder.missing);
+                if (!req.body.hasOwnProperty('available'))
+                    invalidParamErrorBuilder.withInvalidParam('available', InvalidParamErrorBuilder.missing);
+                invalidParamErrorBuilder.throwIfInvalidParams();
+                const activeJob = this.updateFollower(
+                    req.body.uuid,
+                    req.body.status,
+                    req.body.available,
+                    req.body.job_uuid,
+                    req.body.job_status
+                );
+                const responseConfig = {
+                    uuid: this.uuid,
+                };
+                if (activeJob)
+                    Object.assign(responseConfig, {
+                        job: {
+                            uuid: activeJob.uuid,
+                            type: activeJob.type,
+                            config: activeJob.config,
+                        },
+                    });
+                res.json(responseConfig).end();
+            }
+        );
+
+        this.httpServer.addPutHandler(
+            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.jobStatusPath}`,
+            (req, res) => {
                 try {
-                    await this.startPerformanceTest(req.body);
+                    this.handleJobUpdate(req.body.follower_uuid, req.body.job_uuid, req.body.job_status);
+                    res.end();
                 } catch (e) {
-                    next(e);
+                    console.log(e);
+                    throw e;
                 }
-                res.end();
             }
         );
 
@@ -74,7 +90,10 @@ class SpammerLeaderHttp extends SpammerLeader {
     }
 }
 
-SpammerLeaderHttp.connectPath = 'connect';
+SpammerLeaderHttp.followerPath = 'follower';
+SpammerLeaderHttp.jobPath = 'job';
+SpammerLeaderHttp.jobStatusPath = `${SpammerLeaderHttp.jobPath}/status`;
+SpammerLeaderHttp.followerStatusPath = `${SpammerLeaderHttp.followerPath}/status`;
 SpammerLeaderHttp.clientPath = 'clients';
 SpammerLeaderHttp.performancePath = 'performance';
 

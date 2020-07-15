@@ -1,23 +1,41 @@
 const httpClient = require('../../../http/client').getInstance();
-const UuidAlreadyConnectedToLeaderError = require('./spammer-leader-errors');
-const HttpStatusCodes = require('http-status-codes');
+const statusCodes = require('http-status-codes');
 
 class SpammerLeaderClientV1 {
     /**
-     * Connect to a Spammer leader instance.
-     * @param {string} uuid             The UUID of the follower to connect with.
-     * @param {string} socketAddress    The socket address of the follower.
+     * Send an update request to the Spammer host.
+     * @param {string} socketAddress    Socket address of the leader.
+     * @param {string} uuid             The UUID of the follower.
+     * @param {string} status           The staus of the follower.
+     * @param {string} available        The availability of the follower.
      */
-    static async connectToLeader(uuid, socketAddress) {
-        await httpClient
-            .post('/v1/connect', {
+    static async updateLeader(socketAddress, uuid, status, available, jobUuid, jobStauts) {
+        return await httpClient
+            .put(`http://${socketAddress}/v1/follower/status`, {
                 uuid: uuid,
-                socket_address: socketAddress,
+                status: status,
+                available: available,
+                job_uuid: jobUuid,
+                job_status: jobStauts,
             })
-            .then(code => {
-                if (code == HttpStatusCodes.BAD_REQUEST) {
-                    throw new UuidAlreadyConnectedToLeaderError(uuid);
+            .then(result => {
+                if (result.code != statusCodes.OK) {
+                    throw new Error(`Unexpected response from the leader, ${result.code} ${result.body}!`);
                 }
+                return result.body;
+            });
+    }
+
+    static async updateJobStatus(socketAddress, followerUuid, jobUuid, jobStatus) {
+        return await httpClient
+            .put(`http://${socketAddress}/v1/job/status`, {
+                follower_uuid: followerUuid,
+                job_uuid: jobUuid,
+                job_status: jobStatus,
+            })
+            .then(result => {
+                if (result.code != statusCodes.OK)
+                    throw new Error(`Unexected response from the leader, ${result.code} ${result.body}!`);
             });
     }
 }

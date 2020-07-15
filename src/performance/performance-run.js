@@ -11,6 +11,7 @@ class PerformanceRun {
         const batches = Array(this.runtimeSeconds);
         let batchNumber = 0;
         var i = 0;
+        console.info(`Starting performance run of [ ${this.runtimeSeconds} ] seconds at [ ${this.rps} ] rps.`);
         for (i = 0; i < this.runtimeSeconds; i++) {
             batchNumber++;
             batches[i] = this._sendBatch(batchNumber);
@@ -26,7 +27,7 @@ class PerformanceRun {
             requests[i] = this._sendRequest();
         }
         await Promise.all(requests);
-        console.log('Finished batch ' + batchIndex);
+        console.debug('Finished batch ' + batchIndex);
     }
 
     async _sendRequest() {

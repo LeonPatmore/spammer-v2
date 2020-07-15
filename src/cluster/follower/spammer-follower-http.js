@@ -24,13 +24,13 @@ class SpammerFollowerHttp extends SpammerFollower {
 
         const postRunHandler = (req, res, next) => {
             try {
-                if (req.body.hasOwnProperty('run_id')) {
-                    this.startRun(req.body.run_id);
-                } else {
-                    throw new InvalidParamErrorBuilder()
-                        .withInvalidParam('run_id', InvalidParamErrorBuilder.missing)
-                        .build();
-                }
+                const invalidParamErrorBuilder = new InvalidParamErrorBuilder();
+                if (!req.body.hasOwnProperty('config'))
+                    invalidParamErrorBuilder.withInvalidParam('config', InvalidParamErrorBuilder.missing);
+                if (!req.body.hasOwnProperty('run_id'))
+                    invalidParamErrorBuilder.withInvalidParam('run_id', InvalidParamErrorBuilder.missing);
+                invalidParamErrorBuilder.throwIfInvalidParams();
+                this.startRun(req.body.run_id, req.body.delay_ms, req.body.config);
             } catch (e) {
                 if (e instanceof RunIdIsNullError)
                     throw new InvalidParamErrorBuilder()
@@ -41,10 +41,18 @@ class SpammerFollowerHttp extends SpammerFollower {
             res.end();
         };
 
-        const connectionHandler = (_, res) => {
-            res.json({
-                uuid: this.uuid,
-            }).end();
+        const connectionHandler = async (req, res, next) => {
+            try {
+                if (!req.body.hasOwnProperty('socket_address')) {
+                    throw new InvalidParamErrorBuilder()
+                        .withInvalidParam('socket_address', InvalidParamErrorBuilder.missing)
+                        .build();
+                }
+                await this.addLeader(req.body.socket_address);
+            } catch (e) {
+                next(e);
+            }
+            res.end();
         };
 
         this.httpServer.addGetHandler(`/${SpammerFollowerHttp.version}/${SpammerFollowerHttp.runPath}`, getRunHandler);
