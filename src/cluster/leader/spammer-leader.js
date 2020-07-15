@@ -34,6 +34,7 @@ class SpammerLeader {
                 return;
             }
             this._assignJobsToFollowers(currentPerformanceTest, availableFollowers);
+            currentPerformanceTest.followers = availableFollowers;
             currentPerformanceTest.status = performanceTestStatus.WAITING_FOR_FOLLOWERS;
         } else if (currentPerformanceTest.status == performanceTestStatus.WAITING_FOR_FOLLOWERS) {
         }
@@ -70,8 +71,24 @@ class SpammerLeader {
      */
     addPerformanceTestToQueue(config) {
         const performanceTest = new PerformanceTest(config);
+        performanceTest.planJobCompletedCallback = () => this._performancePlanJobCompleted(performanceTest);
         this.performanceTests.push(performanceTest);
         return performanceTest.uuid;
+    }
+
+    _performancePlanJobCompleted(performanceTest) {
+        logger.info(`Send run jobs for performance test [ ${performanceTest.uuid} ]`);
+        const generatedJobs = [];
+        for (const follower of performanceTest.followers) {
+            const job = performanceTest.generateAndAttachRunJob();
+            generatedJobs.push({
+                followerUuid: follower.uuid,
+                job: job,
+            });
+        }
+        for (const job of generatedJobs) {
+            this.followerJobRepository.addJob(job.followerUuid, job.job);
+        }
     }
 
     /**

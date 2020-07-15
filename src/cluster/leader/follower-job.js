@@ -9,11 +9,11 @@ const followerJobStatus = {
 };
 
 class FollowerJob {
-    constructor(config, type, onStatusChange) {
+    constructor(config, type, statusChangeCallback) {
         this.config = config;
         this.status = followerJobStatus.WAITING;
         this.uuid = uuidv4();
-        this.onStatusChange = onStatusChange;
+        this.statusChangeCallback = statusChangeCallback;
         this.type = type;
     }
     changeStatus(newStatus) {
@@ -22,7 +22,8 @@ class FollowerJob {
             return;
         }
         this.status = newStatus;
-        if (this.onStatusChange instanceof Function) this.onStatusChange(newStatus);
+        // TODO check if func
+        this.statusChangeCallback(newStatus);
     }
 }
 
