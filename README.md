@@ -66,20 +66,6 @@ thresholds: {
 
 `npx prettier -c **`: Ensures that all files (not just JS files) are correctly formatted. To fix formatting, you can run `npx prettier --write **`.
 
-## Sequence Diagrams
-
-### Connect to Server
-
-![Connect to Server sequence diagram.](docs/connectToServer.png)
-
-### Start Performance Test
-
-![Start Performance Test sequence diagram.](docs/startPerformanceTest.png)
-
-### Determine Spammer Clients
-
-![Determine Spammer Clients sequence diagram.](docs/determineSpammerClients.png)
-
 ## API
 
 All paths are prefixed by `/vx`, where `x` is the version number.
@@ -96,13 +82,14 @@ Response:
 
 `200 OK`
 
-TODO
-
 ```json
 {
-    "clients" [
+    "clients": [
         {
-            "running": ""
+            "uuid": "be44c20b-e5e6-40d3-ba07-d1966e158f84",
+            "available": true,
+            "status": "hi",
+            "lastUpdate": "2020-07-18T22:35:33.531Z"
         }
     ]
 }
@@ -191,3 +178,23 @@ Response:
     }
 }
 ```
+
+### Follower API
+
+#### Connect to a Leader
+
+Connect to a Spammer leader.
+
+`POST /vx/connect`
+
+Request Body:
+
+```json
+{
+    "socket_address": "localhost:5435"
+}
+```
+
+Response:
+
+`200 OK`

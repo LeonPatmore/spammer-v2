@@ -1,4 +1,4 @@
-const { SpammerFollower, FollowerAlreadyRunningPerformance } = require('../../../cluster/follower/spammer-follower');
+const { SpammerFollower } = require('../../../cluster/follower/spammer-follower');
 const { followerJobStatus } = require('../../../cluster/leader/follower-job');
 const jobTypes = require('../../../cluster/job-types');
 const spammerLeaderClients = require('../../../cluster/follower/leader-clients/spammer-leader-client');

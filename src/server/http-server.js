@@ -11,7 +11,6 @@ class HttpServer {
      * @param {Int32Array} port     Port to bind the server to.
      */
     constructor(hostname, port, ignoredPaths) {
-        // Create and start HTTP server.
         logger.info(`Starting HTTP server, host [ ${hostname} ], port [ ${port} ]`);
         this.express = express();
         this.express.use(express.json());
@@ -27,6 +26,10 @@ class HttpServer {
         this.httpServer = this.express.listen(port, hostname);
     }
 
+    /**
+     * Add a error handler to the server.
+     * @param {Function} errorHandler
+     */
     addErrorHandler(errorHandler) {
         this.express.use(errorHandler);
     }

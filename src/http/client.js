@@ -48,7 +48,7 @@ class HttpClient {
 
     /**
      * The HTTP response in a standard format.
-     * @param {Object} res
+     * @param {Object} res  The response from the axios request.
      */
     _responseInStandardFormat(res) {
         return { code: res.status, body: res.data, headers: res.headers };

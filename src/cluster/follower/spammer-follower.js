@@ -9,6 +9,10 @@ const { followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 
 class LeaderAlreadyConnected extends HttpAwareError {
+    /**
+     * An error for when you are trying to connect a leader which is already connected to this follower.
+     * @param {String} leaderUuid   The id of the leader you are trying to connect.
+     */
     constructor(leaderUuid) {
         super(`leader with id ${leaderUuid} is already connected!`);
     }
@@ -19,7 +23,7 @@ class LeaderAlreadyConnected extends HttpAwareError {
 
 class SpammerFollower {
     /**
-     * Construct an instance of a Spammer follower.
+     * Manages jobs from Spammer leaders.
      */
     constructor() {
         this.uuid = uuidv4();
@@ -29,8 +33,11 @@ class SpammerFollower {
         this.available = true;
         this.jobUpdateQueue = [];
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
-        this.updateLeadersInterval = setInterval(() => this._updateLeaders(), 5000);
-        this.sendJobUpdatesInterval = setInterval(() => this._sendJobUpdates(), 1000);
+        this.updateLeadersInterval = setInterval(() => this._updateLeaders(), SpammerFollower.updateLeadersDelayMs);
+        this.sendJobUpdatesInterval = setInterval(
+            () => this._sendJobUpdates(),
+            SpammerFollower.sendJobStatusUpdatesDelayMs
+        );
         this.jobHandlers = {};
         this.jobHandlers[jobTypes.PERFORMANCE_PLAN] = (_0, jobConfig, _1) => this._handlePerformancePlan(jobConfig);
         this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
@@ -40,10 +47,10 @@ class SpammerFollower {
 
     /**
      * Handle a job from the leader.
-     * @param {*} leaderUuid    The leader of which the job has originated from.
-     * @param {*} jobUuid       The job unique id.
-     * @param {*} jobConfig     The job configuration.
-     * @param {*} jobType       The job type.
+     * @param {String} leaderUuid    The leader of which the job has originated from.
+     * @param {String} jobUuid       The job unique id.
+     * @param {object} jobConfig     The job configuration.
+     * @param {String} jobType       The job type.
      */
     handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
         if (this.jobsHandled.indexOf(jobUuid) > -1) {
@@ -63,6 +70,10 @@ class SpammerFollower {
         this.jobsHandled.push(jobUuid);
     }
 
+    /**
+     * Handle a performance plan job.
+     * @param {object} jobConfig The config of the plan job.
+     */
     _handlePerformancePlan(jobConfig) {
         if (this.performanceRun.uuid) return { status: followerJobStatus.REJECTED };
         logger.info(`Starting performance test plan with id [ ${jobConfig.performanceUuid} ]`);
@@ -77,6 +88,12 @@ class SpammerFollower {
         return { status: followerJobStatus.COMPLETED };
     }
 
+    /**
+     * Handle a performance run job.
+     * @param {String} jobUuid       The unique id of the performance run job.
+     * @param {object} jobConfig     The config of the run job.
+     * @param {String} leaderUuid    The unique id of the leader who owns this performance test.
+     */
     _handlePerformanceRun(jobUuid, jobConfig, leaderUuid) {
         const performanceUuid = jobConfig.performanceUuid;
         if (performanceUuid != this.performanceRun.uuid) {
@@ -93,6 +110,13 @@ class SpammerFollower {
         return { status: followerJobStatus.ACCEPTED };
     }
 
+    /**
+     * Push a job status update to the queue to be sent.
+     * @param {String} leaderUuid    The unique id of the leader.
+     * @param {String} jobUuid       The unique id of the job.
+     * @param {String} jobStatus     The new job status.
+     * @param {object} jobResult     [Optional] The result of the job.
+     */
     _pushJobStatusUpdate(leaderUuid, jobUuid, jobStatus, jobResult) {
         this.jobUpdateQueue.push({
             leaderUuid: leaderUuid,
@@ -102,6 +126,9 @@ class SpammerFollower {
         });
     }
 
+    /**
+     * Send updates to the connected leaders.
+     */
     async _updateLeaders() {
         for (let leader of this.leaders.values()) {
             const { jobs } = await spammerLeaderClients[leader.version].updateLeader(
@@ -116,6 +143,9 @@ class SpammerFollower {
         }
     }
 
+    /**
+     * Send job status updates to the leaders.
+     */
     async _sendJobUpdates() {
         for (var i = this.jobUpdateQueue.length; i--; ) {
             const jobUpdate = this.jobUpdateQueue[i];
@@ -134,6 +164,11 @@ class SpammerFollower {
         }
     }
 
+    /**
+     * Add a leader to the follower.
+     * @param {String} socketAddress    Socket address of the leader.
+     * @param {String} version          [Optional] Version of the leader. If not given, will use the version of the follower.
+     */
     async addLeader(socketAddress, version) {
         const actualVersion = version || SpammerFollower.version;
         const { uuid } = await spammerLeaderClients[actualVersion].updateLeader(
@@ -167,5 +202,7 @@ class SpammerFollower {
 }
 
 SpammerFollower.version = 'v1';
+SpammerFollower.updateLeadersDelayMs = 5000;
+SpammerFollower.sendJobStatusUpdatesDelayMs = 1000;
 
 module.exports = { SpammerFollower };

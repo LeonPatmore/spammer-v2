@@ -4,6 +4,10 @@ const httpStatus = require('http-status-codes');
 const logger = require('../../logger/application-logger');
 
 class JobDoesNotExist extends HttpAwareError {
+    /**
+     * An error for when the job you are trying to get does not exist.
+     * @param {String} jobUuid  The unique id of the job that does not exist.
+     */
     constructor(jobUuid) {
         super(`job with ID ${jobUuid} does not exist!`);
     }
@@ -13,10 +17,17 @@ class JobDoesNotExist extends HttpAwareError {
 }
 
 class FollowerJobRepository {
+    /**
+     * An object responsible for storing the jobs of the followers.
+     */
     constructor() {
         this.followerJobs = new Map();
     }
 
+    /**
+     * Get the current active job for the given follower, or undefined if there is no active job.
+     * @param {String} followerUuid The unique follower id.
+     */
     getActiveJobForFollower(followerUuid) {
         if (!this.followerJobs.has(followerUuid)) return undefined;
         const followerJobs = this.followerJobs.get(followerUuid);
@@ -25,6 +36,11 @@ class FollowerJobRepository {
         }
     }
 
+    /**
+     * Get the job with the given id for the given follower.
+     * @param {String} followerUuid The unique follower id.
+     * @param {String} jobUuid      The unique job id.
+     */
     getJobWithId(followerUuid, jobUuid) {
         if (!this.followerJobs.has(followerUuid)) throw new JobDoesNotExist(jobUuid);
         const followerJobs = this.followerJobs.get(followerUuid);
@@ -35,6 +51,11 @@ class FollowerJobRepository {
         throw new JobDoesNotExist(jobUuid);
     }
 
+    /**
+     * Add a job and assign it to the given follower.
+     * @param {String} followerUuid The unique id of the follower to assign the job to.
+     * @param {FollowerJob} job     The job to add.
+     */
     addJob(followerUuid, job) {
         if (this.followerJobs.has(followerUuid)) {
             this.followerJobs.get(followerUuid).push(job);

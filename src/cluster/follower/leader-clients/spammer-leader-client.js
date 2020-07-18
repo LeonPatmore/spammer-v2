@@ -3,7 +3,7 @@ const statusCodes = require('http-status-codes');
 
 class SpammerLeaderClientV1 {
     /**
-     * Send an update request to the Spammer host.
+     * Send an update request to the Spammer leader.
      * @param {string} socketAddress    Socket address of the leader.
      * @param {string} uuid             The UUID of the follower.
      * @param {string} status           The staus of the follower.
@@ -37,6 +37,14 @@ class SpammerLeaderClientV1 {
             });
     }
 
+    /**
+     * Send a job status update to the Spammer leader.
+     * @param {*} socketAddress Socket address of the spammer leader.
+     * @param {*} followerUuid  Follower id.
+     * @param {*} jobUuid       The unique id of the job to update.
+     * @param {*} jobStatus     The new job status.
+     * @param {*} jobResult     [Optional] The result of the job.
+     */
     static async updateJobStatus(socketAddress, followerUuid, jobUuid, jobStatus, jobResult) {
         return await httpClient
             .put(`http://${socketAddress}/v1/job/status`, {
