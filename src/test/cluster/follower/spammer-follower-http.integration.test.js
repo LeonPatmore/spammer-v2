@@ -3,30 +3,24 @@
  */
 
 const SpammerFollowerHttp = require('../../../cluster/follower/spammer-follower-http');
-const axios = require('axios').default;
+const sendRequest = require('../../test-http-client');
+const spammerLeaderClients = require('../../../cluster/follower/leader-clients/spammer-leader-client');
+jest.mock('../../../cluster/follower/leader-clients/spammer-leader-client');
 
-const spammerPort = 7893;
+spammerLeaderClients.v1.updateLeader.mockImplementation(() => {
+    return {
+        jobs: [],
+        uuid: 'leader-id',
+    };
+});
 
-/**
- * Send a HTTP request.
- * @param {String} method   The method, for example POST.
- * @param {String} path     The path of the request.
- * @param {object} body     The body of the request.
- */
-function sendRequest(method, path, body) {
-    return axios.request({
-        method: method,
-        url: `http://localhost:${spammerPort}/${path}`,
-        data: body,
-        validateStatus: null,
-    });
-}
+const spammerPort = 5634;
 
 describe('API Tests', () => {
     let spammerFollowerInstance;
 
     beforeEach(() => {
-        spammerFollowerInstance = new SpammerFollowerHttp('localhost', spammerPort);
+        spammerFollowerInstance = new SpammerFollowerHttp('127.0.0.1', spammerPort);
     });
 
     afterEach(() => {
@@ -34,28 +28,35 @@ describe('API Tests', () => {
     });
 
     it('Test ping endpoint WHEN requested THEN returns ok response', async () => {
-        const pingResponse = await sendRequest('GET', 'ping');
+        const pingResponse = await sendRequest(spammerPort, 'GET', 'ping');
         expect(pingResponse.status).toEqual(200);
     });
 
-    it('Test get run endpoint WHEN no test runnnig THEN returns ok', async () => {
-        const response = await sendRequest('GET', 'v1/run');
-        expect(response.status).toEqual(404);
-    });
-
-    it('Test get run endpoint WHEN test runnnig THEN returns not found', async () => {
-        spammerFollowerInstance.performanceRunId = 'some-id';
-        const response = await sendRequest('GET', 'v1/run');
-        expect(response.status).toEqual(200);
-    });
-
-    it('Test post run endpoint WHEN no test running THEN returns ok', async () => {
-        const response = await sendRequest('POST', 'v1/run', { run_id: 'some-id' });
-        expect(response.status).toEqual(200);
-    });
-
-    it('Test post run endpoint WHEN no run id param given THEN returns bad', async () => {
-        const response = await sendRequest('POST', 'v1/run', { runId: 'some-id' });
+    it('Test post connect endpoint WHEN no socket_address THEN returns bad response', async () => {
+        const response = await sendRequest(spammerPort, 'POST', 'v1/connect');
         expect(response.status).toEqual(400);
+    });
+
+    it('Test post connect endpoint WHEN leader already connected THEN returns bad response', async () => {
+        spammerFollowerInstance.leaders.set('leader-id', {});
+
+        const response = await sendRequest(spammerPort, 'POST', 'v1/connect', {
+            socket_address: 'my.host:1234',
+        });
+
+        expect(response.status).toEqual(400);
+    });
+
+    it('Test post connect endpoint WHEN valid THEN returns ok response and add to list', async () => {
+        const response = await sendRequest(spammerPort, 'POST', 'v1/connect', {
+            socket_address: 'my.host:1234',
+        });
+
+        expect(response.status).toEqual(200);
+
+        expect(spammerFollowerInstance.leaders.has('leader-id')).toBeTruthy();
+        expect(spammerFollowerInstance.leaders.get('leader-id').uuid).toEqual('leader-id');
+        expect(spammerFollowerInstance.leaders.get('leader-id').version).toEqual('v1');
+        expect(spammerFollowerInstance.leaders.get('leader-id').socketAddress).toEqual('my.host:1234');
     });
 });

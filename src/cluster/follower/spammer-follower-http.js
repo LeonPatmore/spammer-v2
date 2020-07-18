@@ -1,5 +1,4 @@
-const { SpammerFollower } = require('./spammer-follower');
-const httpStatus = require('http-status-codes');
+const { SpammerFollower, RunIdIsNullError } = require('./spammer-follower');
 const HttpServer = require('../../server/http-server');
 const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
 
@@ -13,32 +12,22 @@ class SpammerFollowerHttp extends SpammerFollower {
         super();
         this.httpServer = new HttpServer(hostname, port);
 
-        const getRunHandler = (_, res) => {
-            if (this.hasRun()) {
-                res.json({ run_id: this.performanceRunId });
-            } else {
-                res.status(httpStatus.NOT_FOUND);
-            }
-            res.end();
-        };
-
-        const postRunHandler = (req, res, next) => {
-            try {
-                if (req.body.hasOwnProperty('run_id')) {
-                    this.startRun(req.body);
-                } else {
-                    throw new InvalidParamErrorBuilder()
-                        .withInvalidParam('run_id', InvalidParamErrorBuilder.missing)
-                        .build();
+        this.httpServer.addPostHandler(
+            `/${SpammerFollowerHttp.version}/${SpammerFollowerHttp.connectPath}`,
+            async (req, res, next) => {
+                try {
+                    if (!req.body.hasOwnProperty('socket_address')) {
+                        throw new InvalidParamErrorBuilder()
+                            .withInvalidParam('socket_address', InvalidParamErrorBuilder.missing)
+                            .build();
+                    }
+                    await this.addLeader(req.body.socket_address);
+                } catch (e) {
+                    next(e);
                 }
-            } catch (e) {
-                next(e);
+                res.end();
             }
-            res.end();
-        };
-
-        this.httpServer.addGetHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, getRunHandler);
-        this.httpServer.addPostHandler(`/${SpammerFollower.version}/${SpammerFollowerHttp.runPath}`, postRunHandler);
+        );
         this.httpServer.addErrorHandler(spammerErrorHandler);
     }
 
@@ -46,10 +35,11 @@ class SpammerFollowerHttp extends SpammerFollower {
      * Close the spammer follower.
      */
     close() {
+        super.close();
         this.httpServer.closeServer();
     }
 }
 
-SpammerFollowerHttp.runPath = 'run';
+SpammerFollowerHttp.connectPath = 'connect';
 
 module.exports = SpammerFollowerHttp;

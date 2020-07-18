@@ -1,53 +1,56 @@
-frame connectToServer (clientPublicUrl, clientUuid)
+frame connectFollower (socketAddress, version)
 
-actor SpammerClient
+actor SpammerUser
 
-participant SpammerHostServer
-participant SpammerHostManager
-participant SpammerHostClientStore
+participant SpammerLeaderHttp
+participant SpammerLeader
+participant SpammerFollowerStore
 
-SpammerClient->SpammerHostServer: HTTP POST /v1/connect
-activate SpammerHostServer
+SpammerUser->SpammerLeaderHttp: HTTP POST /v1/connect
+activate SpammerLeaderHttp
 
-SpammerHostServer->SpammerHostManager: addClient (clientPublicUrl, clientUuid)
-activate SpammerHostManager
+SpammerLeaderHttp->SpammerLeader: addFollower (socketAddress, version)
+activate SpammerLeader
 
-SpammerHostManager->SpammerHostClientStore: checkClientExists (clientUuid)
-activate SpammerHostClientStore
+SpammerLeader->SpammerLeader: validatePublicUrl (socketAddress, version) : uuid
 
-SpammerHostClientStore->SpammerHostManager:doesClientExist
-deactivate SpammerHostClientStore
+alt NOT validPublicUrl
 
-alt doesClientExist
+SpammerLeader->SpammerLeaderHttp:Not Valid Public Url
 
-SpammerHostManager->SpammerHostServer: Client Exists
-SpammerHostServer->SpammerClient: 400 Bad Request
+SpammerLeaderHttp->SpammerUser:400 Bad Request
 
 else 
 
-SpammerHostManager->SpammerHostManager:validateClientPublicUrl (clientPublicUrl)
+SpammerLeader->SpammerFollowerStore: checkFollowerConnected (uuid)
+activate SpammerFollowerStore
 
-alt validPublicUrl
+SpammerFollowerStore->SpammerLeader:isFollowerConnected
+deactivate SpammerFollowerStore
+activate SpammerLeader
 
-SpammerHostManager->SpammerHostClientStore:addClient(clientPublicUrl, clientUuid)
-activate SpammerHostClientStore
+alt followerAlreadyConnnected
 
-SpammerHostClientStore->SpammerHostManager:
-deactivate SpammerHostClientStore
-
-
-SpammerHostManager->SpammerHostServer:
-
-SpammerHostServer->SpammerClient: 200 OK
+SpammerLeader->SpammerLeaderHttp: Follower Already Connected
+SpammerLeaderHttp->SpammerUser: 400 Bad Request
 
 else 
 
-SpammerHostManager->SpammerHostServer:Not Valid Public Url
-deactivate SpammerHostManager
+SpammerLeader->SpammerFollowerStore:addFollower(uuid, socketAddress, version)
+activate SpammerFollowerStore
 
-SpammerHostServer->SpammerClient:400 Bad Request
-deactivate SpammerHostServer
+SpammerFollowerStore->SpammerLeader:
+deactivate SpammerFollowerStore
+activate SpammerLeader
 
-end 
+SpammerLeader->SpammerLeaderHttp:
+deactivate SpammerLeader
+deactivate SpammerLeader
+deactivate SpammerLeader
+
+SpammerLeaderHttp->SpammerUser: 200 OK
+deactivate SpammerLeaderHttp
+
+end
 
 end 

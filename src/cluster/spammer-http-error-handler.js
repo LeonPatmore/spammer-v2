@@ -24,6 +24,12 @@ class InvalidParamErrorBuilder {
         return this;
     }
 
+    throwIfInvalidParams() {
+        if (this.invalidParams.length > 0) {
+            throw this.build();
+        }
+    }
+
     build() {
         return new InvalidParamError(this);
     }
@@ -46,6 +52,7 @@ class InvalidParamError extends HttpAwareError {
 
 InvalidParamErrorBuilder.missing = 'parameter missing';
 InvalidParamErrorBuilder.unsupportedValue = 'unsupported value';
+InvalidParamErrorBuilder.notNull = 'must not be null';
 
 function spammerErrorHandler(err, _0, res, _1) {
     if (err instanceof HttpAwareError) {

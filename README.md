@@ -68,8 +68,15 @@ thresholds: {
 
 ![Determine Spammer Clients sequence diagram.](docs/determineSpammerClients.png)
 
+## Responsibilities
+
+### Leader
+
+The responsibility of the host is the following:
+
+- Maintain a list of credible followers.
+- Accept perfomrnace requests and advertise to the followers.
+
 ## API
 
 ### Client
-
-

@@ -7,6 +7,7 @@ class HttpClient {
         return axios({
             method: 'get',
             url: url,
+            validateStatus: null,
         }).then(res => {
             return this._responseInStandardFormat(res);
         });
@@ -17,6 +18,29 @@ class HttpClient {
             method: 'post',
             url: url,
             data: body,
+            validateStatus: null,
+        }).then(res => {
+            return this._responseInStandardFormat(res);
+        });
+    }
+
+    async put(url, body) {
+        return axios({
+            method: 'put',
+            url: url,
+            data: body,
+            validateStatus: null,
+        }).then(res => {
+            return this._responseInStandardFormat(res);
+        });
+    }
+
+    async delete(url, body) {
+        return axios({
+            method: 'delete',
+            url: url,
+            data: body,
+            validateStatus: null,
         }).then(res => {
             return this._responseInStandardFormat(res);
         });
