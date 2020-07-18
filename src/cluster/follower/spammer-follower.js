@@ -34,46 +34,70 @@ class SpammerFollower {
         this.leaders = new Map();
         this.status = 'hi';
         this.available = true;
-        this.currentJobUuid = null;
-        this.currentJobStatus = null;
         this.jobUpdateQueue = [];
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
         setInterval(() => this._updateLeaders(), 5000);
-        setInterval(() => this._sendJobUpdates(), 5000);
+        setInterval(() => this._sendJobUpdates(), 1000);
+        this.jobHandlers = {};
+        this.jobHandlers[jobTypes.PERFORMANCE_PLAN] = (_0, jobConfig, _1) => this._handlePerformancePlan(jobConfig);
+        this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
+            this._handlePerformanceRun(jobUuid, jobConfig, leaderUuid);
+        this.jobsHandled = [];
     }
 
-    async handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
-        if (!this.leaders.has(leaderUuid))
-            throw new Error(`Could not handle job: Leader with ID [ ${leaderUuid} ] not found!`);
-        if (!this.currentJobUuid) {
-            // Start new job.
-            this._startJob(leaderUuid, jobUuid, jobConfig, jobType);
-        }
-        if (jobUuid != this.currentJobUuid) {
-            logger.info(`Not accepting job since there is a job already running!`);
-            this._rejectJob(leaderUuid, jobUuid);
+    handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
+        if (this.jobsHandled.indexOf(jobUuid) > -1) {
+            logger.info(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
             return;
         }
+        if (!this.leaders.has(leaderUuid))
+            throw new Error(`Could not handle job: Leader with ID [ ${leaderUuid} ] not found!`);
+        if (!this.jobHandlers.hasOwnProperty(jobType)) {
+            logger.warn(`Do not know how to handle job type [ ${jobType} ]`);
+            return;
+        }
+        const { status, result } = this.jobHandlers[jobType](jobUuid, jobConfig, leaderUuid);
+        logger.info(`Setting job status to [ ${status} ] with id [ ${jobUuid} ] and result [ ${result} ]`);
+        this._pushJobStatusUpdate(leaderUuid, jobUuid, status, result);
+        this.jobsHandled.push(jobUuid);
     }
 
-    async _startJob(leaderUuid, jobUuid, jobConfig, jobType) {
-        this.currentJobUuid = jobUuid;
-        logger.info(`Starting job with id [ ${jobUuid} ], type [ ${jobType} ] and config [ ${jobConfig} ]`);
-        if (jobType == jobTypes.PERFORMANCE_PLAN)
-            this.jobUpdateQueue.push({
-                leaderUuid: leaderUuid,
-                jobUuid: jobUuid,
-                jobStatus: followerJobStatus.COMPLETED,
-            });
+    _handlePerformancePlan(jobConfig) {
+        if (this.performanceRun.uuid) return { status: followerJobStatus.REJECTED };
+        logger.info(`Starting performance test plan with id [ ${jobConfig.performanceUuid} ]`);
+        this.performanceRun.uuid = jobConfig.performanceUuid;
+        const configModule = requireFromString(jobConfig.config);
+        const runtimeSeconds = configModule.runtimeSeconds || 2;
+        const run = new PerformanceRun(configModule.runRequest, 2, runtimeSeconds);
+        this.performanceRun = {
+            uuid: jobConfig.performanceUuid,
+            run: run,
+        };
+        return { status: followerJobStatus.COMPLETED };
     }
 
-    async _runJob(leaderUuid) {}
+    _handlePerformanceRun(jobUuid, jobConfig, leaderUuid) {
+        const performanceUuid = jobConfig.performanceUuid;
+        if (performanceUuid != this.performanceRun.uuid) {
+            logger.warn(
+                `Can not run performance test with id [ ${performanceUuid} ], not the one that is currently planned!`
+            );
+            return { status: followerJobStatus.REJECTED };
+        }
+        this.performanceRun.run.run(result => {
+            logger.info(`Finished performance run with result [ ${result} ]`);
+            this._pushJobStatusUpdate(leaderUuid, jobUuid, followerJobStatus.COMPLETED, result);
+            this._resetPerformanceRun();
+        });
+        return { status: followerJobStatus.ACCEPTED };
+    }
 
-    async _rejectJob(leaderUuid, jobUuid) {
+    _pushJobStatusUpdate(leaderUuid, jobUuid, jobStatus, jobResult) {
         this.jobUpdateQueue.push({
             leaderUuid: leaderUuid,
             jobUuid: jobUuid,
-            jobStatus: followerJobStatus.REJECTED,
+            jobStatus: jobStatus,
+            jobResult: jobResult,
         });
     }
 
@@ -85,14 +109,8 @@ class SpammerFollower {
                 this.status,
                 this.available
             );
-            if (leaderResponse.hasOwnProperty('job')) {
-                // TODO: Move logic of body -> params into client.
-                this.handleJob(
-                    leader.uuid,
-                    leaderResponse.job.uuid,
-                    leaderResponse.job.config,
-                    leaderResponse.job.type
-                );
+            for (const job of leaderResponse) {
+                this.handleJob(leader.uuid, job.uuid, job.config, job.type);
             }
         }
     }
@@ -100,13 +118,16 @@ class SpammerFollower {
     async _sendJobUpdates() {
         for (var i = this.jobUpdateQueue.length; i--; ) {
             const jobUpdate = this.jobUpdateQueue[i];
-            logger.info(`Sending status update [ ${jobUpdate} ]`);
+            logger.info(
+                `Sending status update for id [ ${jobUpdate.jobUuid} ], status [ ${jobUpdate.jobStatus} ] and result [ ${jobUpdate.jobResult} ]`
+            );
             const leader = this.leaders.get(jobUpdate.leaderUuid);
             await spammerLeaderClients[leader.version].updateJobStatus(
                 leader.socketAddress,
                 this.uuid,
                 jobUpdate.jobUuid,
-                jobUpdate.jobStatus
+                jobUpdate.jobStatus,
+                jobUpdate.jobResult
             );
             this.jobUpdateQueue.splice(i, 1);
         }
@@ -145,24 +166,7 @@ class SpammerFollower {
         };
     }
 
-    /**
-     * Starts a performance run given the config.
-     * @param {string} runId    The run id.
-     */
-    startRun(runId, delayMs, config) {
-        if (!runId) throw new RunIdIsNullError();
-        if (this.hasRun()) throw new FollowerAlreadyRunningPerformance(this.performanceRun.uuid);
-        const configModule = requireFromString(config);
-        const runtimeSeconds = configModule.runtimeSeconds || 2;
-        const run = new PerformanceRun(configModule.runRequest, 2, runtimeSeconds);
-        run.run(a => {
-            this.performanceRun = {};
-        });
-        this.performanceRun = {
-            uuid: runId,
-            run: run,
-        };
-    }
+    close() {}
 }
 
 SpammerFollower.version = 'v1';

@@ -5,6 +5,10 @@ class PerformanceRun {
         this.runRequest = runRequest;
         this.rps = rps;
         this.runtimeSeconds = runtimeSeconds;
+
+        this.requestsSent = 0;
+        this.success = 0;
+        this.failed = 0;
     }
 
     async run(onFinish) {
@@ -17,7 +21,13 @@ class PerformanceRun {
             batches[i] = this._sendBatch(batchNumber);
             await sleep(1000);
         }
-        await Promise.all(batches).then(_ => onFinish('hello'));
+        await Promise.all(batches).then(_ =>
+            onFinish({
+                total: this.requestsSent,
+                success: this.success,
+                failed: this.failed,
+            })
+        );
     }
 
     async _sendBatch(batchIndex) {
@@ -32,6 +42,8 @@ class PerformanceRun {
 
     async _sendRequest() {
         const result = await this.runRequest();
+        this.requestsSent++;
+        this.success++;
         return result;
     }
 }

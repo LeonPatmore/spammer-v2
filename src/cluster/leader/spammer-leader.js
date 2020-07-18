@@ -8,6 +8,16 @@ const { HttpAwareError } = require('../spammer-http-error-handler');
 const spammerFollowerClients = require('./follower-clients/spammer-follower-clients');
 const { PerformanceTest, performanceTestStatus } = require('./performance-test');
 const { FollowerJobRepository } = require('./follower-job-repository');
+const statusCodes = require('http-status-codes');
+
+class UnknownPerformanceTest extends HttpAwareError {
+    constructor(performanceUuid) {
+        super(`can not find performance test with id ${performanceUuid}!`);
+    }
+    getHttpCode() {
+        return statusCodes.BAD_REQUEST;
+    }
+}
 
 class SpammerLeader {
     constructor() {
@@ -19,9 +29,24 @@ class SpammerLeader {
         setInterval(() => this._managePerformanceTests(), 5000);
     }
 
+    getPerformanceTest(performanceUuid) {
+        for (const performanceTest of this.performanceTests) {
+            if (performanceTest.uuid == performanceUuid) return performanceTest;
+        }
+        throw new UnknownPerformanceTest(performanceUuid);
+    }
+
+    _getLatestPerformanceTest() {
+        for (const performanceTest of this.performanceTests) {
+            if (performanceTest.status != performanceTestStatus.DONE) {
+                return performanceTest;
+            }
+        }
+    }
+
     async _managePerformanceTests() {
-        if (this.performanceTests.length <= 0) return;
-        const currentPerformanceTest = this.performanceTests[0];
+        const currentPerformanceTest = this._getLatestPerformanceTest();
+        if (!currentPerformanceTest) return;
         if (
             currentPerformanceTest.status == performanceTestStatus.IN_QUEUE ||
             currentPerformanceTest.status == performanceTestStatus.WAITING_FOR_ENOUGH_FOLLOWERS
@@ -36,7 +61,6 @@ class SpammerLeader {
             this._assignJobsToFollowers(currentPerformanceTest, availableFollowers);
             currentPerformanceTest.followers = availableFollowers;
             currentPerformanceTest.status = performanceTestStatus.WAITING_FOR_FOLLOWERS;
-        } else if (currentPerformanceTest.status == performanceTestStatus.WAITING_FOR_FOLLOWERS) {
         }
     }
 
@@ -71,12 +95,13 @@ class SpammerLeader {
      */
     addPerformanceTestToQueue(config) {
         const performanceTest = new PerformanceTest(config);
-        performanceTest.planJobCompletedCallback = () => this._performancePlanJobCompleted(performanceTest);
+        performanceTest.planJobsCompletedCallback = () => this._performancePlanCompleted(performanceTest);
+        performanceTest.runJobsCompletedCallback = () => this._performanceRunCompleted(performanceTest);
         this.performanceTests.push(performanceTest);
         return performanceTest.uuid;
     }
 
-    _performancePlanJobCompleted(performanceTest) {
+    _performancePlanCompleted(performanceTest) {
         logger.info(`Send run jobs for performance test [ ${performanceTest.uuid} ]`);
         const generatedJobs = [];
         for (const follower of performanceTest.followers) {
@@ -89,6 +114,12 @@ class SpammerLeader {
         for (const job of generatedJobs) {
             this.followerJobRepository.addJob(job.followerUuid, job.job);
         }
+        performanceTest.status = performanceTestStatus.RUNNING;
+    }
+
+    _performanceRunCompleted(performanceTest) {
+        logger.info(`Completing performance test [ ${performanceTest.uuid} ]`);
+        performanceTest.status = performanceTestStatus.DONE;
     }
 
     /**
@@ -111,12 +142,12 @@ class SpammerLeader {
         return activeJob;
     }
 
-    handleJobUpdate(followerUuid, jobUuid, jobStatus) {
+    handleJobUpdate(followerUuid, jobUuid, jobStatus, jobResult) {
         logger.debug(
-            `Handling job update [ ${jobUuid} ] with status [ ${jobStatus} ] from follower [ ${followerUuid} ]`
+            `Handling job update [ ${jobUuid} ] with status [ ${jobStatus} ] and result [ ${jobResult} ] from follower [ ${followerUuid} ]`
         );
         const job = this.followerJobRepository.getJobWithId(followerUuid, jobUuid);
-        job.changeStatus(jobStatus);
+        job.changeStatus(jobStatus, jobResult);
         logger.info(`Job with ID [ ${jobUuid} ] has updated with status [ ${jobStatus} ]`);
     }
 

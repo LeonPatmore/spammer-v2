@@ -32,6 +32,22 @@ class SpammerLeaderHttp extends SpammerLeader {
             }
         );
 
+        this.httpServer.addGetHandler(
+            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performancePath}/:performanceUuid`,
+            (req, res) => {
+                const performanceUuid = req.params.performanceUuid;
+                const performanceTest = this.getPerformanceTest(performanceUuid);
+                res.json({
+                    uuid: performanceTest.uuid,
+                    status: performanceTest.status,
+                    followers: performanceTest.followers,
+                    run_jobs: performanceTest.runJobs,
+                    plan_jobs: performanceTest.planJobs,
+                    result: performanceTest.result,
+                }).end();
+            }
+        );
+
         this.httpServer.addPutHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.followerStatusPath}`,
             (req, res) => {
@@ -69,7 +85,12 @@ class SpammerLeaderHttp extends SpammerLeader {
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.jobStatusPath}`,
             (req, res) => {
                 try {
-                    this.handleJobUpdate(req.body.follower_uuid, req.body.job_uuid, req.body.job_status);
+                    this.handleJobUpdate(
+                        req.body.follower_uuid,
+                        req.body.job_uuid,
+                        req.body.job_status,
+                        req.body.job_result
+                    );
                     res.end();
                 } catch (e) {
                     console.log(e);

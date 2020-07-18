@@ -9,29 +9,37 @@ class SpammerLeaderClientV1 {
      * @param {string} status           The staus of the follower.
      * @param {string} available        The availability of the follower.
      */
-    static async updateLeader(socketAddress, uuid, status, available, jobUuid, jobStauts) {
+    static async updateLeader(socketAddress, uuid, status, available) {
         return await httpClient
             .put(`http://${socketAddress}/v1/follower/status`, {
                 uuid: uuid,
                 status: status,
                 available: available,
-                job_uuid: jobUuid,
-                job_status: jobStauts,
             })
             .then(result => {
                 if (result.code != statusCodes.OK) {
                     throw new Error(`Unexpected response from the leader, ${result.code} ${result.body}!`);
                 }
-                return result.body;
+                if (!result.body.hasOwnProperty('job')) {
+                    return [];
+                }
+                return [
+                    {
+                        uuid: result.body.job.uuid,
+                        config: result.body.job.config,
+                        type: result.body.job.type,
+                    },
+                ];
             });
     }
 
-    static async updateJobStatus(socketAddress, followerUuid, jobUuid, jobStatus) {
+    static async updateJobStatus(socketAddress, followerUuid, jobUuid, jobStatus, jobResult) {
         return await httpClient
             .put(`http://${socketAddress}/v1/job/status`, {
                 follower_uuid: followerUuid,
                 job_uuid: jobUuid,
                 job_status: jobStatus,
+                job_result: jobResult,
             })
             .then(result => {
                 if (result.code != statusCodes.OK)

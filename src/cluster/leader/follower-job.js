@@ -16,14 +16,15 @@ class FollowerJob {
         this.statusChangeCallback = statusChangeCallback;
         this.type = type;
     }
-    changeStatus(newStatus) {
+    changeStatus(newStatus, result) {
         if (newStatus == this.status) {
             logger.info(`Job status change is not new, will do nothing!`);
             return;
         }
         this.status = newStatus;
+        this.result = result;
         // TODO check if func
-        this.statusChangeCallback(newStatus);
+        if (this.statusChangeCallback instanceof Function) this.statusChangeCallback(newStatus);
     }
 }
 
