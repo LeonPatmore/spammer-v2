@@ -10,7 +10,7 @@ const axios = require('axios').default;
 function sendRequest(port, method, path, body) {
     return axios.request({
         method: method,
-        url: `http://localhost:${port}/${path}`,
+        url: `http://127.0.0.1:${port}/${path}`,
         data: body,
         validateStatus: null,
     });
