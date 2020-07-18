@@ -1,6 +1,11 @@
 module.exports = function(config) {
     config.set({
-        mutate: ['src/**/*.js', '!src/test/**/*'],
+        mutate: [
+            'src/**/*.js',
+            '!src/cluster/leader/spammer-leader.js',
+            '!src/cluster/follower/spammer-follower.js',
+            '!src/test/**/*',
+        ],
         mutator: 'javascript',
         packageManager: 'npm',
         reporters: ['html'],
