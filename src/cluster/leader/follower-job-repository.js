@@ -1,8 +1,14 @@
 const { followerJobStatus } = require('./follower-job');
+const { HttpAwareError } = require('../spammer-http-error-handler');
+const httpStatus = require('http-status-codes');
+const logger = require('../../logger/application-logger');
 
-class JobDoesNotExist extends Error {
+class JobDoesNotExist extends HttpAwareError {
     constructor(jobUuid) {
-        super(`Job with ID [ ${jobUuid} ] does not exist!`);
+        super(`job with ID ${jobUuid} does not exist!`);
+    }
+    getHttpCode() {
+        return httpStatus.BAD_REQUEST;
     }
 }
 

@@ -29,9 +29,6 @@ jobs:
             - run:
                   name: unit-tests
                   command: npm test
-            - run:
-                  name: mutation-tests
-                  command: npm run mutation
 workflows:
     version: 2
     build_test_push:

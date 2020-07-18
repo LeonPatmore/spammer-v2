@@ -14,6 +14,8 @@ class Spammer {
         const port = configuration.get('port');
         const leaderOrFollower = configuration.get('spammerType');
 
+        logger.info(leaderOrFollower);
+
         /**
          * Load as a follower.
          */

@@ -23,7 +23,6 @@ class FollowerJob {
         }
         this.status = newStatus;
         this.result = result;
-        // TODO check if func
         if (this.statusChangeCallback instanceof Function) this.statusChangeCallback(newStatus);
     }
 }

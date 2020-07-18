@@ -17,7 +17,7 @@ class SpammerLeaderHttp extends SpammerLeader {
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.clientPath}`,
             async (_, res) => {
                 res.status(httpStatus.OK)
-                    .json({ clients: await this.followersToJson() })
+                    .json({ clients: Array.from(this.connectedFollowers.values()) })
                     .end();
             }
         );
@@ -51,6 +51,7 @@ class SpammerLeaderHttp extends SpammerLeader {
         this.httpServer.addPutHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.followerStatusPath}`,
             (req, res) => {
+                // TODO: Remove validation.
                 const invalidParamErrorBuilder = new InvalidParamErrorBuilder();
                 if (!req.body.hasOwnProperty('uuid'))
                     invalidParamErrorBuilder.withInvalidParam('uuid', InvalidParamErrorBuilder.missing);
@@ -70,6 +71,7 @@ class SpammerLeaderHttp extends SpammerLeader {
                     uuid: this.uuid,
                 };
                 if (activeJob)
+                    // TODO Test this
                     Object.assign(responseConfig, {
                         job: {
                             uuid: activeJob.uuid,
@@ -93,7 +95,6 @@ class SpammerLeaderHttp extends SpammerLeader {
                     );
                     res.end();
                 } catch (e) {
-                    console.log(e);
                     throw e;
                 }
             }

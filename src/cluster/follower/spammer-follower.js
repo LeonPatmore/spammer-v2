@@ -8,19 +8,12 @@ const spammerLeaderClients = require('./leader-clients/spammer-leader-client');
 const { followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 
-class FollowerAlreadyRunningPerformance extends HttpAwareError {
-    constructor(performanceRunId) {
-        super(`Performance test already running with ID [ ${performanceRunId} ]`);
-        this.performanceRunId = performanceRunId;
+class LeaderAlreadyConnected extends HttpAwareError {
+    constructor(leaderUuid) {
+        super(`leader with id ${leaderUuid} is already connected!`);
     }
     getHttpCode() {
         return httpStatus.BAD_REQUEST;
-    }
-}
-
-class RunIdIsNullError extends Error {
-    constructor() {
-        super('The run ID must not be null!');
     }
 }
 
@@ -36,8 +29,8 @@ class SpammerFollower {
         this.available = true;
         this.jobUpdateQueue = [];
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
-        setInterval(() => this._updateLeaders(), 5000);
-        setInterval(() => this._sendJobUpdates(), 1000);
+        this.updateLeadersInterval = setInterval(() => this._updateLeaders(), 5000);
+        this.sendJobUpdatesInterval = setInterval(() => this._sendJobUpdates(), 1000);
         this.jobHandlers = {};
         this.jobHandlers[jobTypes.PERFORMANCE_PLAN] = (_0, jobConfig, _1) => this._handlePerformancePlan(jobConfig);
         this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
@@ -45,6 +38,13 @@ class SpammerFollower {
         this.jobsHandled = [];
     }
 
+    /**
+     * Handle a job from the leader.
+     * @param {*} leaderUuid    The leader of which the job has originated from.
+     * @param {*} jobUuid       The job unique id.
+     * @param {*} jobConfig     The job configuration.
+     * @param {*} jobType       The job type.
+     */
     handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
         if (this.jobsHandled.indexOf(jobUuid) > -1) {
             logger.info(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
@@ -54,6 +54,7 @@ class SpammerFollower {
             throw new Error(`Could not handle job: Leader with ID [ ${leaderUuid} ] not found!`);
         if (!this.jobHandlers.hasOwnProperty(jobType)) {
             logger.warn(`Do not know how to handle job type [ ${jobType} ]`);
+            this._pushJobStatusUpdate(leaderUuid, jobUuid, followerJobStatus.REJECTED);
             return;
         }
         const { status, result } = this.jobHandlers[jobType](jobUuid, jobConfig, leaderUuid);
@@ -103,13 +104,13 @@ class SpammerFollower {
 
     async _updateLeaders() {
         for (let leader of this.leaders.values()) {
-            const leaderResponse = await spammerLeaderClients[leader.version].updateLeader(
+            const { jobs } = await spammerLeaderClients[leader.version].updateLeader(
                 leader.socketAddress,
                 this.uuid,
                 this.status,
                 this.available
             );
-            for (const job of leaderResponse) {
+            for (const job of jobs) {
                 this.handleJob(leader.uuid, job.uuid, job.config, job.type);
             }
         }
@@ -135,25 +136,18 @@ class SpammerFollower {
 
     async addLeader(socketAddress, version) {
         const actualVersion = version || SpammerFollower.version;
-        const leaderUuid = await spammerLeaderClients[actualVersion].updateLeader(
+        const { uuid } = await spammerLeaderClients[actualVersion].updateLeader(
             socketAddress,
             this.uuid,
             this.status,
             this.available
         );
-        if (this.leaders.has(leaderUuid)) throw new Error('Leader already connected!');
-        this.leaders.set(leaderUuid, {
+        if (this.leaders.has(uuid)) throw new LeaderAlreadyConnected(uuid);
+        this.leaders.set(uuid, {
             socketAddress: socketAddress,
             version: actualVersion,
-            uuid: leaderUuid,
+            uuid: uuid,
         });
-    }
-
-    /**
-     * Returns true if we are already running a performance test, else false.
-     */
-    hasRun() {
-        return this.performanceRun.uuid != null;
     }
 
     /**
@@ -166,9 +160,12 @@ class SpammerFollower {
         };
     }
 
-    close() {}
+    close() {
+        clearInterval(this.updateLeadersInterval);
+        clearInterval(this.sendJobUpdatesInterval);
+    }
 }
 
 SpammerFollower.version = 'v1';
 
-module.exports = { SpammerFollower, FollowerAlreadyRunningPerformance, RunIdIsNullError };
+module.exports = { SpammerFollower };
