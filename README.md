@@ -6,6 +6,18 @@
 
 `npm start`
 
+### Environment Variables
+
+Generic variables (applicable for followers and leaders):
+
+- `SPAMMER_PORT`: Port of the server.
+- `SPAMMER_HOST`: Host for server to bind to.
+- `SPAMMER_TYPE`: Either *follower* or *leader*.
+
+Follower variables:
+
+- `INITIAL_LEADER_SOCKET_ADDRESS`: [Optional] Socket address of leader to automatically connect to.
+
 ## Testing
 
 ### Unit Tests
@@ -19,7 +31,7 @@ The following thresholds must be met in order for the command to pass:
 
 ```json
 "globals": {
-    "branches": 80,
+    "branches": 70,
     "functions": 80,
     "lines": 80,
     "statements": 80
@@ -68,15 +80,114 @@ thresholds: {
 
 ![Determine Spammer Clients sequence diagram.](docs/determineSpammerClients.png)
 
-## Responsibilities
-
-### Leader
-
-The responsibility of the host is the following:
-
-- Maintain a list of credible followers.
-- Accept perfomrnace requests and advertise to the followers.
-
 ## API
 
-### Client
+All paths are prefixed by `/vx`, where `x` is the version number.
+
+### Leader API
+
+#### Get Clients
+
+Get a list of clients connected to this leader.
+
+`POST /vx/clients`
+
+Response:
+
+`200 OK`
+
+TODO
+
+```json
+{
+    "clients" [
+        {
+            "running": ""
+        }
+    ]
+}
+```
+
+#### Add Performance Test
+
+Add a performance test to the queue.
+
+`POST /vx/performance`
+
+Request Body:
+
+```javascript
+function runRequest() {
+    console.log("hi")
+}
+module.exports = {
+    runtimeSeconds: 5,
+    runRequest: runRequest
+}
+```
+
+Response:
+
+`200 OK`
+
+```json
+{
+    "test_uuid": "223fe4d4-bbbf-47f0-b1cb-abe0b357d842"
+}
+```
+
+#### Get Performance Test
+
+Get a performance test .
+
+`GET /vx/performance/{performance_uuid}`
+
+Response:
+
+`200 OK`
+
+```json
+{
+    "uuid": "223fe4d4-bbbf-47f0-b1cb-abe0b357d842",
+    "status": "done",
+    "followers": [
+        {
+            "uuid": "9041a92f-6d44-4b31-aa5d-65851fd32616",
+            "available": true,
+            "status": "hi",
+            "lastUpdate": "2020-07-18T02:38:42.467Z"
+        }
+    ],
+    "run_jobs": [
+        {
+            "config": {
+                "performanceUuid": "223fe4d4-bbbf-47f0-b1cb-abe0b357d842"
+            },
+            "status": "completed",
+            "uuid": "28f0fce9-2f00-4e08-97ac-5eca091c27ed",
+            "type": "performance_run",
+            "result": {
+                "total": 10,
+                "success": 10,
+                "failed": 0
+            }
+        }
+    ],
+    "plan_jobs": [
+        {
+            "config": {
+                "performanceUuid": "223fe4d4-bbbf-47f0-b1cb-abe0b357d842",
+                "config": "\r\nfunction runRequest() {\r\n    console.log(\"hi\")\r\n}\r\n\r\nmodule.exports = {\r\n    runtimeSeconds: 5,\r\n    runRequest: runRequest\r\n}\r\n"
+            },
+            "status": "completed",
+            "uuid": "706495ee-91a9-476e-9b59-ddadefc9003e",
+            "type": "peformance_plan"
+        }
+    ],
+    "result": {
+        "total": 10,
+        "success": 10,
+        "failed": 0
+    }
+}
+```

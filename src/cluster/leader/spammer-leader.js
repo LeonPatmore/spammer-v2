@@ -5,7 +5,6 @@
 const logger = require('../../logger/application-logger');
 const { v4: uuidv4 } = require('uuid');
 const { HttpAwareError } = require('../spammer-http-error-handler');
-const spammerFollowerClients = require('./follower-clients/spammer-follower-clients');
 const { PerformanceTest, performanceTestStatus } = require('./performance-test');
 const { FollowerJobRepository } = require('./follower-job-repository');
 const statusCodes = require('http-status-codes');
@@ -15,7 +14,7 @@ class UnknownPerformanceTest extends HttpAwareError {
         super(`can not find performance test with id ${performanceUuid}!`);
     }
     getHttpCode() {
-        return statusCodes.BAD_REQUEST;
+        return statusCodes.NOT_FOUND;
     }
 }
 
@@ -26,7 +25,7 @@ class SpammerLeader {
         this.followerJobRepository = new FollowerJobRepository();
         this.connectedFollowers = new Map();
         this.performanceTests = [];
-        setInterval(() => this._managePerformanceTests(), 5000);
+        this.managePerformanceTestsInterval = setInterval(() => this._managePerformanceTests(), 1000);
     }
 
     getPerformanceTest(performanceUuid) {
@@ -151,26 +150,9 @@ class SpammerLeader {
         logger.info(`Job with ID [ ${jobUuid} ] has updated with status [ ${jobStatus} ]`);
     }
 
-    /**
-     * Get a list of clients and the relevant information.
-     */
-    async followersToJson() {
-        const followers = [];
-        for (const follower of this.connectedFollowers.values()) {
-            let isRunning = 'unknown';
-            try {
-                isRunning = await spammerFollowerClients[follower.version].runningPerformanceRun(
-                    follower.socketAddress
-                );
-            } catch (e) {
-                logger.warn(`Cannot determine if follower [ ${follower.uuid} ] is running!`);
-            }
-            followers.push(Object.assign({ running: isRunning }, follower));
-        }
-        return followers;
+    close() {
+        clearInterval(this.managePerformanceTestsInterval);
     }
-
-    close() {}
 }
 
 SpammerLeader.version = 'v1';

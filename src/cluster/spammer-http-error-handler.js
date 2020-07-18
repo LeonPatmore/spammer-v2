@@ -5,12 +5,8 @@ class HttpAwareError extends Error {
         super(message);
     }
 
-    getHttpCode() {
-        return httpStatus.INTERNAL_SERVER_ERROR;
-    }
-
     getErrorJson() {
-        return this.message;
+        return [this.message];
     }
 }
 
@@ -58,8 +54,8 @@ function spammerErrorHandler(err, _0, res, _1) {
     if (err instanceof HttpAwareError) {
         res.status(err.getHttpCode()).json({ errors: err.getErrorJson() });
     } else {
-        res.status(500).json({
-            error: err.message,
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            errors: [err.message],
         });
     }
     res.end();
