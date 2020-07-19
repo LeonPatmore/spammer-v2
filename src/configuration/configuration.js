@@ -19,6 +19,18 @@ const config = convict({
         default: 'leader',
         env: 'SPAMMER_TYPE',
     },
+    initialLeaderSocketAddress: {
+        doc: '[Optional] The inital leader to connect to.',
+        format: String,
+        default: '',
+        env: 'SPAMMER_INITIAL_LEADER_SOCKET_ADDRESS',
+    },
+    initialLeaderVersion: {
+        doc: '[Optional] The inital leader version.',
+        format: String,
+        default: '',
+        env: 'SPAMMER_INITIAL_LEADER_VERSION',
+    },
 });
 
 config.validate({ allowed: 'strict' });

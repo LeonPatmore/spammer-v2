@@ -7,8 +7,6 @@ jest.mock('../../../cluster/follower/leader-clients/spammer-leader-client');
 
 spammerLeaderClients.v1.updateJobStatus.mockImplementation(() => {});
 
-let spammerFollower;
-
 const getNexmoJobUpdate = async (delay = 100, attempts = 60) => {
     for (let i = 0; i < attempts; i++) {
         const calls = spammerLeaderClients.v1.updateJobStatus.mock.calls.length;
@@ -21,20 +19,22 @@ const getNexmoJobUpdate = async (delay = 100, attempts = 60) => {
     throw new Error('Could not find job update!');
 };
 
-beforeEach(() => {
-    spammerFollower = new SpammerFollower();
-    spammerFollower.leaders.set('a-leader-id', {
-        socketAddress: 'a-socket-address',
-        version: 'v1',
-        uuid: 'a-leader-id',
-    });
-});
-
-afterEach(() => {
-    spammerFollower.close();
-});
-
 describe('Handle job tests', () => {
+    let spammerFollower;
+
+    beforeEach(() => {
+        spammerFollower = new SpammerFollower();
+        spammerFollower.leaders.set('a-leader-id', {
+            socketAddress: 'a-socket-address',
+            version: 'v1',
+            uuid: 'a-leader-id',
+        });
+    });
+
+    afterEach(() => {
+        spammerFollower.close();
+    });
+
     it('WHEN job has already been handled THEN do nothing', () => {
         spammerFollower.jobsHandled.push('some-id');
 
@@ -151,5 +151,51 @@ describe('Handle job tests', () => {
                 undefined,
             ]);
         });
+    });
+});
+
+describe('Initial leader tests', () => {
+    let spammerFollower;
+
+    const waitForLeader = async (leaderUuid, delay = 100, attempts = 60) => {
+        for (let i = 0; i < attempts; i++) {
+            if (spammerFollower.leaders.has(leaderUuid)) return spammerFollower.leaders.get(leaderUuid);
+            await sleep(delay);
+        }
+        throw new Error('Could not find leader!');
+    };
+
+    afterEach(() => {
+        spammerFollower.close();
+    });
+
+    it('WHEN inital leader given with no version THEN adds the leader with follower version', async () => {
+        spammerLeaderClients.v1.updateLeader.mockImplementation(() => {
+            return {
+                uuid: 'some-leader-uuid',
+            };
+        });
+
+        spammerFollower = new SpammerFollower('socket.address:1234');
+
+        const leader = await waitForLeader('some-leader-uuid');
+        expect(leader.uuid).toEqual('some-leader-uuid');
+        expect(leader.version).toEqual(SpammerFollower.version);
+        expect(leader.socketAddress).toEqual('socket.address:1234');
+    });
+
+    it('WHEN inital leader given with version THEN adds the leader with follower version', async () => {
+        spammerLeaderClients.v1.updateLeader.mockImplementation(() => {
+            return {
+                uuid: 'some-leader-uuid',
+            };
+        });
+
+        spammerFollower = new SpammerFollower('socket.address:1234', 'v1');
+
+        const leader = await waitForLeader('some-leader-uuid');
+        expect(leader.uuid).toEqual('some-leader-uuid');
+        expect(leader.version).toEqual('v1');
+        expect(leader.socketAddress).toEqual('socket.address:1234');
     });
 });
