@@ -14,13 +14,18 @@ class Spammer {
         const port = configuration.get('port');
         const leaderOrFollower = configuration.get('spammerType');
 
-        logger.info(leaderOrFollower);
-
         /**
          * Load as a follower.
          */
         const loadSpammerFollower = () => {
-            const spammerFollowerHttp = new SpammerFollowerHttp(host, port);
+            const initialLeaderSocketAddress = configuration.get('initialLeaderSocketAddress');
+            const initialLeaderVersion = configuration.get('initialLeaderVersion');
+            const spammerFollowerHttp = new SpammerFollowerHttp(
+                host,
+                port,
+                initialLeaderSocketAddress,
+                initialLeaderVersion
+            );
             this.spammerFollowerHttp = spammerFollowerHttp;
         };
 

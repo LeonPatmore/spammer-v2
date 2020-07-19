@@ -1,15 +1,17 @@
-const { SpammerFollower, RunIdIsNullError } = require('./spammer-follower');
+const { SpammerFollower } = require('./spammer-follower');
 const HttpServer = require('../../server/http-server');
 const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
 
 class SpammerFollowerHttp extends SpammerFollower {
     /**
      * Create a Spammer follower instance exposed via HTTP.
-     * @param {String}     hostname Hostname to bind the server to.
-     * @param {Int32Array} port     Port to bind the server to.
+     * @param {String}     hostname                     Hostname to bind the server to.
+     * @param {Int32Array} port                         Port to bind the server to.
+     * @param {String}     initialLeaderSocketAddress   [Optional] A leader socket address to automatically connect to.
+     * @param {String}     initialLeaderVersion         [Optional] A leader version.
      */
-    constructor(hostname, port) {
-        super();
+    constructor(hostname, port, initialLeaderSocketAddress, initialLeaderVersion) {
+        super(initialLeaderSocketAddress, initialLeaderVersion);
         this.httpServer = new HttpServer(hostname, port);
 
         this.httpServer.addPostHandler(

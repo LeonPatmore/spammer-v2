@@ -24,8 +24,10 @@ class LeaderAlreadyConnected extends HttpAwareError {
 class SpammerFollower {
     /**
      * Manages jobs from Spammer leaders.
+     * @param {String} initialLeaderSocketAddress   [Optional] A leader socket address to automatically connect to.
+     * @param {String} initialLeaderVersion         [Optional] A leader version.
      */
-    constructor() {
+    constructor(initialLeaderSocketAddress, initialLeaderVersion) {
         this.uuid = uuidv4();
         this._resetPerformanceRun();
         this.leaders = new Map();
@@ -43,6 +45,13 @@ class SpammerFollower {
         this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
             this._handlePerformanceRun(jobUuid, jobConfig, leaderUuid);
         this.jobsHandled = [];
+
+        if (initialLeaderSocketAddress) {
+            logger.info(
+                `Connecting to initial leader with address [ ${initialLeaderSocketAddress} ] and version [ ${initialLeaderVersion} ]`
+            );
+            this.addLeader(initialLeaderSocketAddress, initialLeaderVersion);
+        }
     }
 
     /**
