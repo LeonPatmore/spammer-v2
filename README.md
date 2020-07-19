@@ -16,13 +16,17 @@ Generic variables (applicable for followers and leaders):
 
 Follower variables:
 
-- `INITIAL_LEADER_SOCKET_ADDRESS`: [Optional] Socket address of leader to automatically connect to.
+- `SPAMMER_INITIAL_LEADER_SOCKET_ADDRESS`: [Optional] Socket address of leader to automatically connect to.
 
 ## Testing
 
 ### Unit Tests
 
 `npm test`
+
+Running an individual test:
+
+`npx jest test/spammer.unit.test.js`
 
 #### Coverage
 
