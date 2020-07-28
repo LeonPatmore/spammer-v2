@@ -95,6 +95,7 @@ class SpammerLeaderHttp extends SpammerLeader {
                     );
                     res.end();
                 } catch (e) {
+                    console.log(e);
                     throw e;
                 }
             }

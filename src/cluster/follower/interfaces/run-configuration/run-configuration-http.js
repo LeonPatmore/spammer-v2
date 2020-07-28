@@ -11,9 +11,11 @@ class HttpRunConfiguration extends RunConfiguration {
         this.httpClient = new HttpClient();
     }
     _getRunRequest() {
-        return config => {
+        return async config => {
             logger.info(`Sending request to URL [ ${this.url} ] with method [ ${this.method} ]`);
-            config.metricsManager.addMetricValue('response_code', 200);
+            const result = await this.httpClient.request(this.method, this.url);
+            config.metricsManager.addMetricValue('response_code', result.code);
+            config.metricsManager.addMetricValue('response_time', result.responseTimeMs);
         };
     }
 }
