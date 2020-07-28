@@ -1,33 +1,23 @@
 const sleep = require('../utils/sleep');
 
-class PerformanceRun {
+class Repeater {
     constructor(runRequest, rps, runtimeSeconds) {
         this.runRequest = runRequest;
         this.rps = rps;
         this.runtimeSeconds = runtimeSeconds;
-
-        this.requestsSent = 0;
-        this.success = 0;
-        this.failed = 0;
     }
 
-    async run(onFinish) {
+    async start(onFinish) {
         const batches = Array(this.runtimeSeconds);
         let batchNumber = 0;
         var i = 0;
-        console.info(`Starting performance run of [ ${this.runtimeSeconds} ] seconds at [ ${this.rps} ] rps.`);
+        console.info(`Starting repitition [ ${this.runtimeSeconds} ] seconds at [ ${this.rps} ] rps.`);
         for (i = 0; i < this.runtimeSeconds; i++) {
             batchNumber++;
             batches[i] = this._sendBatch(batchNumber);
             await sleep(1000);
         }
-        await Promise.all(batches).then(_ =>
-            onFinish({
-                total: this.requestsSent,
-                success: this.success,
-                failed: this.failed,
-            })
-        );
+        await Promise.all(batches).then(_ => onFinish());
     }
 
     async _sendBatch(batchIndex) {
@@ -41,11 +31,8 @@ class PerformanceRun {
     }
 
     async _sendRequest() {
-        const result = await this.runRequest();
-        this.requestsSent++;
-        this.success++;
-        return result;
+        await this.runRequest();
     }
 }
 
-module.exports = PerformanceRun;
+module.exports = Repeater;

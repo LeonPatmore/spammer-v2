@@ -2,11 +2,11 @@ const { v4: uuidv4 } = require('uuid');
 const logger = require('../../logger/application-logger');
 const { HttpAwareError } = require('../spammer-http-error-handler');
 const httpStatus = require('http-status-codes');
-const PerformanceRun = require('../../performance/performance-run');
 const requireFromString = require('require-from-string');
 const spammerLeaderClients = require('./leader-clients/spammer-leader-client');
 const { followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
+const getRunConfiguration = require('./interfaces/run-configuration/run-configurations');
 
 class LeaderAlreadyConnected extends HttpAwareError {
     /**
@@ -88,8 +88,7 @@ class SpammerFollower {
         logger.info(`Starting performance test plan with id [ ${jobConfig.performanceUuid} ]`);
         this.performanceRun.uuid = jobConfig.performanceUuid;
         const configModule = requireFromString(jobConfig.config);
-        const runtimeSeconds = configModule.runtimeSeconds || 2;
-        const run = new PerformanceRun(configModule.runRequest, 2, runtimeSeconds);
+        const run = getRunConfiguration(configModule).createPerformanceRun();
         this.performanceRun = {
             uuid: jobConfig.performanceUuid,
             run: run,

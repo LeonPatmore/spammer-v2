@@ -37,16 +37,16 @@ describe('Add performance test', () => {
         const runJobUuid = secondJob.uuid;
 
         spammerLeader.handleJobUpdate('follower-id', runJobUuid, followerJobStatus.COMPLETED, {
-            total: 5,
-            success: 4,
-            failed: 1,
+            successful_requests: 5,
+            total_requests: 4,
+            custom_metric: 1,
         });
 
         expect(performanceTest.status).toEqual(performanceTestStatus.DONE);
         expect(performanceTest.result).toEqual({
-            total: 5,
-            success: 4,
-            failed: 1,
+            successful_requests: 5,
+            total_requests: 4,
+            custom_metric: [1],
         });
     });
     it('WHEN adding a valid performance test AND there are no followers THEN test is waiting for followers', async () => {
