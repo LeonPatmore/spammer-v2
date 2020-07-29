@@ -4,7 +4,7 @@ class MetricsManager {
     constructor(metricsConfig) {
         this.metrics = {};
         if (metricsConfig && metricsConfig.hasOwnProperty('metrics')) {
-            for (const metric in metricsConfig.metrics) {
+            for (const metric of metricsConfig.metrics) {
                 const name = metric.name;
                 const type = metric.type;
                 this._initMetric(name, type);

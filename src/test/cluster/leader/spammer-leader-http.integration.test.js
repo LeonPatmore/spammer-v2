@@ -4,7 +4,6 @@
 
 const SpammerLeaderHttp = require('../../../cluster/leader/spammer-leader-http');
 const sendRequest = require('../../test-http-client');
-const { PerformanceTest } = require('../../../cluster/leader/performance-test');
 const { FollowerJob } = require('../../../cluster/leader/follower-job');
 
 const spammerPort = 23334;
