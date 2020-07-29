@@ -1,8 +1,42 @@
 const axios = require('axios');
 
+axios.interceptors.request.use(
+    function(config) {
+        config.metadata = { startTime: new Date() };
+        return config;
+    },
+    function(error) {
+        return Promise.reject(error);
+    }
+);
+
+axios.interceptors.response.use(
+    function(response) {
+        response.config.metadata.endTime = new Date();
+        response.duration = response.config.metadata.endTime - response.config.metadata.startTime;
+        return response;
+    },
+    function(error) {
+        error.config.metadata.endTime = new Date();
+        error.duration = error.config.metadata.endTime - error.config.metadata.startTime;
+        return Promise.reject(error);
+    }
+);
+
 let instance = null;
 
 class HttpClient {
+    async request(method, url, body) {
+        return axios({
+            method: method,
+            url: url,
+            data: body,
+            validateStatus: null,
+        }).then(res => {
+            return this._responseInStandardFormat(res);
+        });
+    }
+
     async get(url) {
         return axios({
             method: 'get',
@@ -51,7 +85,7 @@ class HttpClient {
      * @param {Object} res  The response from the axios request.
      */
     _responseInStandardFormat(res) {
-        return { code: res.status, body: res.data, headers: res.headers };
+        return { code: res.status, body: res.data, headers: res.headers, responseTimeMs: res.duration };
     }
 
     /**

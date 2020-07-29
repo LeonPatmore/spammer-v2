@@ -11,7 +11,6 @@ const getNexmoJobUpdate = async (delay = 100, attempts = 60) => {
     for (let i = 0; i < attempts; i++) {
         const calls = spammerLeaderClients.v1.updateJobStatus.mock.calls.length;
         if (calls > 0) {
-            console.log('Found update job status!');
             return spammerLeaderClients.v1.updateJobStatus.mock.calls[0];
         }
         await sleep(delay);

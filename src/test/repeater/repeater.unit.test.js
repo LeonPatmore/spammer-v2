@@ -1,13 +1,13 @@
-const PerformanceRun = require('../../performance/performance-run');
+const Repeater = require('../../repeater/repeater');
 
-it('Ensure that performance run sends the correct amount of requests and calls finish', async () => {
+it('Ensure that the repeater sends the correct amount of requests and calls finish', async () => {
     // Setup performance run with mock counter.
     const myRequestFunction = jest.fn();
-    const myRun = new PerformanceRun(myRequestFunction, 2, 2);
+    const myRepeater = new Repeater(myRequestFunction, 2, 2);
     const myFinishFunction = jest.fn();
 
-    // Run performance test.
-    await myRun.run(myFinishFunction);
+    // Run repeater.
+    await myRepeater.start(myFinishFunction);
 
     // Ensure counter was called correct amount of times.
     expect(myRequestFunction.mock.calls.length).toEqual(4);
