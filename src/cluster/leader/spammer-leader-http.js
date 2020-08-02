@@ -39,6 +39,7 @@ class SpammerLeaderHttp extends SpammerLeader {
                 const performanceTest = this.getPerformanceTest(performanceUuid);
                 res.json({
                     uuid: performanceTest.uuid,
+                    metrics_config: performanceTest.metricsConfig,
                     status: performanceTest.status,
                     followers: performanceTest.followers,
                     run_jobs: performanceTest.runJobs,

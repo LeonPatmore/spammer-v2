@@ -3,8 +3,8 @@ const logger = require('../../../../logger/application-logger');
 const RunConfiguration = require('./run-configuration');
 
 class HttpRunConfiguration extends RunConfiguration {
-    constructor(config) {
-        super(config);
+    constructor(config, metricsConfig) {
+        super(config, metricsConfig);
         // TODO check properties exist.
         this.url = config.url;
         this.method = config.method;

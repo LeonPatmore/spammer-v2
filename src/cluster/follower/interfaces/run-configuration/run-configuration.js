@@ -1,8 +1,9 @@
 const PerformanceRun = require('../../performance-run');
 
 class RunConfiguration {
-    constructor(config) {
+    constructor(config, metricsConfig) {
         this.config = config;
+        this.metricsConfig = metricsConfig;
     }
     _getRunRequest() {
         return this.config.runRequest;
@@ -14,7 +15,7 @@ class RunConfiguration {
         return this.config.runtimeSeconds || 5;
     }
     createPerformanceRun() {
-        return new PerformanceRun(this._getRunRequest(), this._getRps(), this._getRuntimeSeconds());
+        return new PerformanceRun(this._getRunRequest(), this._getRps(), this._getRuntimeSeconds(), this.metricsConfig);
     }
 }
 

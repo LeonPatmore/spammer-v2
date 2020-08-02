@@ -19,10 +19,10 @@ const runConfigurations = {
     default: RunConfiguration,
 };
 
-function getRunConfiguration(config) {
+function getRunConfiguration(config, metricsConfig) {
     const configurationName = config.interface || 'default';
     logger.info(`Using run configuration with name [ ${configurationName} ]`);
-    return new runConfigurations[configurationName](config);
+    return new runConfigurations[configurationName](config, metricsConfig);
 }
 
 module.exports = getRunConfiguration;

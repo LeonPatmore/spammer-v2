@@ -2,8 +2,8 @@ const Repeater = require('../../repeater/repeater');
 const MetricsManager = require('../../metrics/metrics-manager');
 
 class PerformanceRun extends Repeater {
-    constructor(runRequest, rps, runtimeSeconds) {
-        const metricsManager = new MetricsManager();
+    constructor(runRequest, rps, runtimeSeconds, metricsConfig) {
+        const metricsManager = new MetricsManager(metricsConfig);
         const runRequestWithMetrics = async () => {
             try {
                 await runRequest({ metricsManager: metricsManager });
