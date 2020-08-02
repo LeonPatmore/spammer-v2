@@ -202,3 +202,69 @@ Request Body:
 Response:
 
 `200 OK`
+
+## Interfaces
+
+### HTTP
+
+#### Configuratiion/Metrics API
+
+Configuration body:
+
+- `method`: The HTTP method to use.
+- `url`: The url to send the request to.
+
+Metrics:
+
+- `response_code`: A list of response codes.
+- `response_time`: A list of response times in ms.
+
+**Example:**
+
+Configuration body:
+
+```javascript
+module.exports = {
+    runtimeSeconds: 5,
+    interface: 'http',
+    method: 'post',
+    url: 'http://localhost:5435/123'
+}
+```
+
+Metrics:
+
+```json
+ "result": {
+        "response_code": [
+            [
+                404,
+                404,
+                404,
+                404,
+                404,
+                404,
+                404,
+                404,
+                404,
+                404
+            ]
+        ],
+        "response_time": [
+            [
+                4,
+                6,
+                2,
+                4,
+                4,
+                6,
+                2,
+                3,
+                3,
+                5
+            ]
+        ],
+        "successful_requests": 10,
+        "total_requests": 10
+    }
+```
