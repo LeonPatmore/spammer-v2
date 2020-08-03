@@ -22,14 +22,16 @@ function _handleMetricList(name, list, metricsConfig) {
  */
 function _createNewMetrics(metricsConfig, currentMetrics) {
     for (metricName in metricsConfig) {
-        console.log(metricName);
         const metricType = metricsConfig[metricName].type;
         switch (metricType) {
             case metricTypes.PERCENTILE:
-                // TODO Finish implementation.
                 const targetMetric = metricsConfig[metricName].targetMetric;
                 const percentileNumber = metricsConfig[metricName].percentile;
-                currentMetrics[metricName] = 'percentile of ' + targetMetric + ' at ' + percentileNumber;
+
+                const sortedValues = currentMetrics[targetMetric].sort((a, b) => a - b);
+                const index = Math.ceil((sortedValues.length * percentileNumber) / 100.0);
+
+                currentMetrics[metricName] = sortedValues[index];
                 break;
         }
     }
