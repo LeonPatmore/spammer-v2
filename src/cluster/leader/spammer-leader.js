@@ -115,10 +115,9 @@ class SpammerLeader {
     addPerformanceTestToQueue(config) {
         const configModule = requireFromString(config);
         const metricsConfig = {
-            ...config.metrics,
+            ...configModule.metrics,
             ...metricsConfigurations(configModule),
         };
-        console.log(metricsConfig);
         const performanceTest = new PerformanceTest(config, metricsConfig);
         performanceTest.planJobsCompletedCallback = () => this._performancePlanCompleted(performanceTest);
         performanceTest.runJobsCompletedCallback = () => this._performanceRunCompleted(performanceTest);

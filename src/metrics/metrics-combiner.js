@@ -8,6 +8,7 @@ const logger = require('../logger/logger');
  * @param {*} metricsConfig
  */
 function _handleMetricList(name, list, metricsConfig) {
+    if (!metricsConfig.hasOwnProperty(name)) return [].concat.apply([], list);
     if (metricsConfig[name].type == metricTypes.ROLLING_TOTAL) {
         return list.reduce((a, b) => a + b, 0);
     } else {

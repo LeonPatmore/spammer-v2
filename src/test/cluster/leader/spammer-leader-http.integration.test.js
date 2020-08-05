@@ -8,6 +8,15 @@ const { FollowerJob } = require('../../../cluster/leader/follower-job');
 
 const spammerPort = 23334;
 
+const configString = `function runRequest() {
+    console.log("hi")
+}
+
+module.exports = {
+    runtimeSeconds: 5,
+    runRequest: runRequest
+}`;
+
 describe('API Tests', () => {
     let spammerLeaderInstance;
 
@@ -80,11 +89,14 @@ describe('API Tests', () => {
         it('Test start test WHEN more than one client THEN ok response', async () => {
             spammerLeaderInstance.connectedFollowers.set('uuid', {
                 uuid: 'uuid',
+
                 socketAddress: 'socketAddress',
                 version: 'v1',
             });
 
-            const response = await sendRequest(spammerPort, 'POST', 'v1/performance');
+            const response = await sendRequest(spammerPort, 'POST', 'v1/performance', configString, {
+                'Content-Type': 'application/javascript',
+            });
             expect(response.status).toEqual(200);
         });
     });

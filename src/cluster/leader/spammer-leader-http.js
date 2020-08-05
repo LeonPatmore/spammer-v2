@@ -25,10 +25,15 @@ class SpammerLeaderHttp extends SpammerLeader {
         this.httpServer.addPostHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performancePath}`,
             (req, res) => {
-                const testUuid = this.addPerformanceTestToQueue(req.body);
-                res.json({
-                    test_uuid: testUuid,
-                }).end();
+                try {
+                    const testUuid = this.addPerformanceTestToQueue(req.body);
+                    res.json({
+                        test_uuid: testUuid,
+                    }).end();
+                } catch (e) {
+                    console.error(e);
+                    throw e;
+                }
             }
         );
 
