@@ -26,6 +26,10 @@ Follower variables:
 
 Running an individual test:
 
+`npx jest -t <test_name>`
+
+Running a test file:
+
 `npx jest test/spammer.unit.test.js`
 
 #### Coverage
@@ -214,8 +218,6 @@ Configuration body:
 
 ### HTTP
 
-#### Configuratiion/Metrics API
-
 Configuration body:
 
 - `interface: http`
@@ -273,6 +275,9 @@ Metrics:
             ]
         ],
         "successful_requests": 10,
-        "total_requests": 10
+        "total_requests": 10,
+        "response_code_percentile_80": 4,
+        "response_code_percentile_95": 5,
+        "response_code_percentile_99": 6
     }
 ```

@@ -86,10 +86,44 @@ describe('API Tests', () => {
             expect(response.data.result).toEqual('some-result');
         });
 
+        it('Test get performance metrics WHEN no performance test THEN not found response', async () => {
+            const response = await sendRequest(spammerPort, 'GET', 'v1/performance/some-id');
+
+            expect(response.status).toEqual(404);
+            expect(response.data.errors).toHaveLength(1);
+            expect(response.data.errors[0]).toEqual('can not find performance test with id some-id!');
+        });
+
+        it('Test get performance metrics WHEN performance test THEN returns metrics with long metrics removed for readability', async () => {
+            spammerLeaderInstance.performanceTests.push({
+                uuid: 'some-id',
+                status: 'some-status',
+                followers: 'some-followers',
+                runJobs: 'some-run-jobs',
+                planJobs: 'some-plan-jobs',
+                result: {
+                    'some-metric': 5,
+                    'another-metric': 'hi',
+                    'short-list': [1, 2],
+                    'long-list': [1, 2, 3, 4, 5, 6, 7, 8],
+                },
+            });
+
+            const response = await sendRequest(spammerPort, 'GET', 'v1/performance/some-id/metrics');
+
+            expect(response.status).toEqual(200);
+            expect(response.data).toHaveProperty('some-metric');
+            expect(response.data['some-metric']).toEqual(5);
+            expect(response.data).toHaveProperty('another-metric');
+            expect(response.data['another-metric']).toEqual('hi');
+            expect(response.data).toHaveProperty('short-list');
+            expect(response.data['short-list']).toEqual([1, 2]);
+            expect(response.data).not.toHaveProperty('long-list');
+        });
+
         it('Test start test WHEN more than one client THEN ok response', async () => {
             spammerLeaderInstance.connectedFollowers.set('uuid', {
                 uuid: 'uuid',
-
                 socketAddress: 'socketAddress',
                 version: 'v1',
             });

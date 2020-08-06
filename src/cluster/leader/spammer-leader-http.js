@@ -3,6 +3,20 @@ const httpStatus = require('http-status-codes');
 const { SpammerLeader } = require('./spammer-leader');
 const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
 
+/**
+ * Generates an object of readable metrics given the original object of metrics.
+ * @param {object} metricsConfig A metrics object.
+ */
+function _readableMetrics(metricsConfig) {
+    const readableMetrics = {};
+    for (const metric in metricsConfig) {
+        if (!Array.isArray(metricsConfig[metric]) || metricsConfig[metric].length < 5) {
+            readableMetrics[metric] = metricsConfig[metric];
+        }
+    }
+    return readableMetrics;
+}
+
 class SpammerLeaderHttp extends SpammerLeader {
     /**
      * Create an instance of the Spammer server as a host.
@@ -51,6 +65,15 @@ class SpammerLeaderHttp extends SpammerLeader {
                     plan_jobs: performanceTest.planJobs,
                     result: performanceTest.result,
                 }).end();
+            }
+        );
+
+        this.httpServer.addGetHandler(
+            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performanceMetricsPath}`,
+            (req, res) => {
+                const performanceUuid = req.params.performanceUuid;
+                const performanceTest = this.getPerformanceTest(performanceUuid);
+                res.json(_readableMetrics(performanceTest.result)).end();
             }
         );
 
@@ -125,5 +148,6 @@ SpammerLeaderHttp.jobStatusPath = `${SpammerLeaderHttp.jobPath}/status`;
 SpammerLeaderHttp.followerStatusPath = `${SpammerLeaderHttp.followerPath}/status`;
 SpammerLeaderHttp.clientPath = 'clients';
 SpammerLeaderHttp.performancePath = 'performance';
+SpammerLeaderHttp.performanceMetricsPath = `${SpammerLeaderHttp.performancePath}/:performanceUuid/metrics`;
 
 module.exports = SpammerLeaderHttp;
