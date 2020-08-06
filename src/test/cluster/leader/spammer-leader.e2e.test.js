@@ -6,6 +6,15 @@ const { performanceTestStatus } = require('../../../cluster/leader/performance-t
 
 let spammerLeader;
 
+const configString = `function runRequest() {
+    console.log("hi")
+}
+
+module.exports = {
+    runtimeSeconds: 5,
+    runRequest: runRequest
+}`;
+
 beforeEach(() => {
     spammerLeader = new SpammerLeader();
 });
@@ -18,7 +27,21 @@ describe('Add performance test', () => {
     it('WHEN adding a valid performance test THEN test is started and completed', async () => {
         spammerLeader.updateFollower('follower-id', 'status', true);
 
-        const performanceUuid = spammerLeader.addPerformanceTestToQueue('some-config');
+        const configStringWithCustomMetric = `function runRequest() {
+            console.log("hi")
+        }
+        
+        module.exports = {
+            runtimeSeconds: 5,
+            runRequest: runRequest,
+            metrics: {
+                custom_metric: {
+                    type: 'per_request_value'
+                }
+            }
+        }`;
+
+        const performanceUuid = spammerLeader.addPerformanceTestToQueue(configStringWithCustomMetric);
         const performanceTest = spammerLeader.getPerformanceTest(performanceUuid);
 
         const firstJob = await waitForNextFollowerJob('follower-id');
@@ -50,7 +73,7 @@ describe('Add performance test', () => {
         });
     });
     it('WHEN adding a valid performance test AND there are no followers THEN test is waiting for followers', async () => {
-        const performanceUuid = spammerLeader.addPerformanceTestToQueue('some-config');
+        const performanceUuid = spammerLeader.addPerformanceTestToQueue(configString);
         const performanceTest = spammerLeader.getPerformanceTest(performanceUuid);
 
         await waitForPerformanceTestStatus(performanceTest, performanceTestStatus.WAITING_FOR_ENOUGH_FOLLOWERS);

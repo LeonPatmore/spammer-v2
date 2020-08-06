@@ -205,12 +205,20 @@ Response:
 
 ## Interfaces
 
+### Common
+
+Configuration body:
+
+- `rps`: Number of requests per second.
+- `runtimeSeconds`: Total length of the performance test.
+
 ### HTTP
 
 #### Configuratiion/Metrics API
 
 Configuration body:
 
+- `interface: http`
 - `method`: The HTTP method to use.
 - `url`: The url to send the request to.
 

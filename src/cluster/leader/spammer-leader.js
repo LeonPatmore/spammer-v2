@@ -8,6 +8,8 @@ const { HttpAwareError } = require('../spammer-http-error-handler');
 const { PerformanceTest, performanceTestStatus } = require('./performance-test');
 const { FollowerJobRepository } = require('./follower-job-repository');
 const statusCodes = require('http-status-codes');
+const metricsConfigurations = require('./interfaces/metrics/metrics-configurations');
+const requireFromString = require('require-from-string');
 
 class UnknownPerformanceTest extends HttpAwareError {
     constructor(performanceUuid) {
@@ -111,7 +113,12 @@ class SpammerLeader {
      * @param {String} config   The performance test configuration.
      */
     addPerformanceTestToQueue(config) {
-        const performanceTest = new PerformanceTest(config);
+        const configModule = requireFromString(config);
+        const metricsConfig = {
+            ...configModule.metrics,
+            ...metricsConfigurations(configModule),
+        };
+        const performanceTest = new PerformanceTest(config, metricsConfig);
         performanceTest.planJobsCompletedCallback = () => this._performancePlanCompleted(performanceTest);
         performanceTest.runJobsCompletedCallback = () => this._performanceRunCompleted(performanceTest);
         this.performanceTests.push(performanceTest);

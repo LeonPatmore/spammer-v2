@@ -1,20 +1,27 @@
 const metricsCombiner = require('../../metrics/metrics-combiner');
+const metricTypes = require('../../metrics/metric-types');
+
+const someMetricConfig = {
+    metric_one: {
+        type: metricTypes.ROLLING_TOTAL,
+    },
+    metric_two: {
+        type: metricTypes.ROLLING_TOTAL,
+    },
+};
 
 it('Test single result with default configs', () => {
-    const result = metricsCombiner({}, [
+    const result = metricsCombiner(someMetricConfig, [
         {
-            successful_requests: 20,
-            failed_requests: 15,
-            total_requests: 17,
+            metric_one: 20,
+            metric_two: 15,
         },
     ]);
 
-    expect(result).toHaveProperty('successful_requests');
-    expect(result.successful_requests).toEqual(20);
-    expect(result).toHaveProperty('failed_requests');
-    expect(result.failed_requests).toEqual(15);
-    expect(result).toHaveProperty('total_requests');
-    expect(result.total_requests).toEqual(17);
+    expect(result).toHaveProperty('metric_one');
+    expect(result.metric_one).toEqual(20);
+    expect(result).toHaveProperty('metric_two');
+    expect(result.metric_two).toEqual(15);
 });
 
 it('Test single result with default configs THEN defaults to list', () => {

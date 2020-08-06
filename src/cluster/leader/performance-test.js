@@ -19,10 +19,11 @@ class PerformancePlanJob extends FollowerJob {
      * @param {String} performanceUuid          The unique id of the performance test.
      * @param {Function} statusChangeCallback   A function which is called when the status of the job changes.
      */
-    constructor(config, performanceUuid, statusChangeCallback) {
+    constructor(config, performanceUuid, metricsConfig, statusChangeCallback) {
         super(
             {
                 performanceUuid: performanceUuid,
+                metricsConfig: metricsConfig,
                 config: config,
             },
             jobTypes.PERFORMANCE_PLAN,
@@ -54,20 +55,18 @@ class PerformanceTest {
      * - Calculating results.
      * - Creating follower jobs.
      * - Listening to follower job results.
-     * @param {object} config                       The performance configuration.
-     * @param {Array} followers                     An array of followers responsible for running this performance test.
-     * @param {Function} planJobsCompletedCallback  The function which is called when all plan jobs have been completed.
-     * @param {Function} runJobsCompletedCallback   The function which is caleld when all run jobs have been completed.
+     * @param {object}      config                      The performance configuration.
      */
-    constructor(config, followers, planJobsCompletedCallback, runJobsCompletedCallback) {
+    constructor(config, metricsConfig) {
         this.uuid = uuidv4();
         this.config = config;
-        this.followers = followers;
+        this.metricsConfig = metricsConfig;
         this.status = performanceTestStatus.IN_QUEUE;
         this.planJobs = [];
         this.runJobs = [];
-        this.planJobsCompletedCallback = planJobsCompletedCallback;
-        this.runJobsCompletedCallback = runJobsCompletedCallback;
+        this.followers = undefined;
+        this.planJobsCompletedCallback = undefined;
+        this.runJobsCompletedCallback = undefined;
         this.result = undefined;
     }
 
@@ -75,7 +74,9 @@ class PerformanceTest {
      * Generates a plan job.
      */
     generateAndAttachPlanJob() {
-        const job = new PerformancePlanJob(this.config, this.uuid, status => this._planJobStatusChange(status));
+        const job = new PerformancePlanJob(this.config, this.uuid, this.metricsConfig, status =>
+            this._planJobStatusChange(status)
+        );
         this.planJobs.push(job);
         return job;
     }
@@ -143,7 +144,7 @@ class PerformanceTest {
         });
         if (allJobsCompleted) {
             logger.info(`All run jobs have been completed for performance test [ ${this.uuid} ]`);
-            this.result = metricsCombiner({}, results);
+            this.result = metricsCombiner(this.metricsConfig, results);
             this.runJobsCompletedCallback();
         }
     }

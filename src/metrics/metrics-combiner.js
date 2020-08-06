@@ -1,25 +1,50 @@
-const PerformanceRun = require('../cluster/follower/performance-run');
 const metricTypes = require('./metric-types');
+const logger = require('../logger/logger');
 
-const defaultMetricsConfig = {};
-
-defaultMetricsConfig[PerformanceRun.successMetric] = metricTypes.ROLLING_TOTAL;
-defaultMetricsConfig[PerformanceRun.failedMetric] = metricTypes.ROLLING_TOTAL;
-defaultMetricsConfig[PerformanceRun.totalMetric] = metricTypes.ROLLING_TOTAL;
-
+/**
+ *
+ * @param {*} name
+ * @param {*} list
+ * @param {*} metricsConfig
+ */
 function _handleMetricList(name, list, metricsConfig) {
-    if (metricsConfig[name] == metricTypes.ROLLING_TOTAL) {
+    if (!metricsConfig.hasOwnProperty(name)) return [].concat.apply([], list);
+    if (metricsConfig[name].type == metricTypes.ROLLING_TOTAL) {
         return list.reduce((a, b) => a + b, 0);
     } else {
-        return list;
+        return [].concat.apply([], list);
     }
 }
 
+/**
+ *
+ * @param {*} metricsConfig
+ * @param {*} currentMetrics
+ */
+function _createNewMetrics(metricsConfig, currentMetrics) {
+    for (metricName in metricsConfig) {
+        const metricType = metricsConfig[metricName].type;
+        switch (metricType) {
+            case metricTypes.PERCENTILE:
+                const targetMetric = metricsConfig[metricName].targetMetric;
+                const percentileNumber = metricsConfig[metricName].percentile;
+
+                const sortedValues = currentMetrics[targetMetric].sort((a, b) => a - b);
+                const index = Math.ceil((sortedValues.length * percentileNumber) / 100.0);
+
+                currentMetrics[metricName] = sortedValues[index];
+                break;
+        }
+    }
+}
+
+/**
+ *
+ * @param {object}  metricsConfig
+ * @param {Array}   metrics
+ */
 function metricsCombiner(metricsConfig, metrics) {
-    const metricsConfigFull = {
-        ...metricsConfig,
-        ...defaultMetricsConfig,
-    };
+    logger.info(`Combining metrics with config ${JSON.stringify(metricsConfig)}`);
     const metricLists = {};
     for (const metricDict of metrics) {
         for (const metric in metricDict) {
@@ -29,12 +54,9 @@ function metricsCombiner(metricsConfig, metrics) {
     }
     const finalMetrics = {};
     for (const metricListName in metricLists) {
-        finalMetrics[metricListName] = _handleMetricList(
-            metricListName,
-            metricLists[metricListName],
-            metricsConfigFull
-        );
+        finalMetrics[metricListName] = _handleMetricList(metricListName, metricLists[metricListName], metricsConfig);
     }
+    _createNewMetrics(metricsConfig, finalMetrics);
     return finalMetrics;
 }
 

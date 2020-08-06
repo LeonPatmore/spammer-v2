@@ -7,9 +7,10 @@ const axios = require('axios').default;
  * @param {String} path     The path of the request.
  * @param {object} body     The body of the request.
  */
-function sendRequest(port, method, path, body) {
+function sendRequest(port, method, path, body, headers) {
     return axios.request({
         method: method,
+        headers: headers,
         url: `http://127.0.0.1:${port}/${path}`,
         data: body,
         validateStatus: null,

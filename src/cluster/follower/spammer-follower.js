@@ -88,7 +88,7 @@ class SpammerFollower {
         logger.info(`Starting performance test plan with id [ ${jobConfig.performanceUuid} ]`);
         this.performanceRun.uuid = jobConfig.performanceUuid;
         const configModule = requireFromString(jobConfig.config);
-        const run = getRunConfiguration(configModule).createPerformanceRun();
+        const run = getRunConfiguration(configModule, jobConfig.metricsConfig).createPerformanceRun();
         this.performanceRun = {
             uuid: jobConfig.performanceUuid,
             run: run,
