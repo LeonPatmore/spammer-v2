@@ -37,6 +37,20 @@ class FollowerJobRepository {
     }
 
     /**
+     * TODO
+     * @param {*} followerUuid
+     */
+    getActiveJobsForFollower(followerUuid) {
+        if (!this.followerJobs.has(followerUuid)) return undefined;
+        const followerJobs = this.followerJobs.get(followerUuid);
+        const activeJobs = [];
+        for (let job of followerJobs) {
+            if (!FollowerJobRepository.terminatedJobStatuses.includes(job.status)) activeJobs.push(job);
+        }
+        return activeJobs;
+    }
+
+    /**
      * Get the job with the given id for the given follower.
      * @param {String} followerUuid The unique follower id.
      * @param {String} jobUuid      The unique job id.
