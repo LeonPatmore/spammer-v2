@@ -25,18 +25,6 @@ class FollowerJobRepository {
     }
 
     /**
-     * Get the current active job for the given follower, or undefined if there is no active job.
-     * @param {String} followerUuid The unique follower id.
-     */
-    getActiveJobForFollower(followerUuid) {
-        if (!this.followerJobs.has(followerUuid)) return undefined;
-        const followerJobs = this.followerJobs.get(followerUuid);
-        for (let job of followerJobs) {
-            if (!FollowerJobRepository.terminatedJobStatuses.includes(job.status)) return job;
-        }
-    }
-
-    /**
      * TODO
      * @param {*} followerUuid
      */

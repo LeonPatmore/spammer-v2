@@ -21,14 +21,14 @@ class SpammerLeaderClientV1 {
                     throw new Error(`Unexpected response from the leader, ${result.code} ${result.body}!`);
                 }
                 let jobs = [];
-                if (result.body.hasOwnProperty('job')) {
-                    jobs = [
-                        {
-                            uuid: result.body.job.uuid,
-                            config: result.body.job.config,
-                            type: result.body.job.type,
-                        },
-                    ];
+                if (result.body.hasOwnProperty('jobs')) {
+                    for (const job in result.body.jobs) {
+                        jobs.push({
+                            uuid: job.uuid,
+                            config: job.config,
+                            type: job.type,
+                        });
+                    }
                 }
                 return {
                     uuid: result.body.uuid,
