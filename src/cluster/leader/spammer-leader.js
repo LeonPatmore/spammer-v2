@@ -167,7 +167,7 @@ class SpammerLeader {
             available: available,
             status: status,
             lastUpdate: new Date(),
-            job: activeJob,
+            jobs: activeJobs,
         });
         return activeJobs;
     }

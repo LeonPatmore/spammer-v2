@@ -90,8 +90,8 @@ const waitForPerformanceTestStatus = async (performanceTest, expectedStatus, del
 
 const waitForNextFollowerJob = async (followerUuid, delay = 100, attempts = 60) => {
     for (let i = 0; i < attempts; i++) {
-        const activeJob = spammerLeader.followerJobRepository.getActiveJobForFollower(followerUuid);
-        if (activeJob) return activeJob;
+        const activeJobs = spammerLeader.followerJobRepository.getActiveJobsForFollower(followerUuid);
+        if (activeJobs && activeJobs.length > 0) return activeJobs[0];
         await sleep(delay);
     }
     throw new Error('Could not find next follower job!');

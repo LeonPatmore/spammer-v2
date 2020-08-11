@@ -25,8 +25,8 @@ class FollowerJobRepository {
     }
 
     /**
-     * TODO
-     * @param {*} followerUuid
+     * Get a list of active jobs for a given follower.
+     * @param {String} followerUuid The unique follower id.
      */
     getActiveJobsForFollower(followerUuid) {
         if (!this.followerJobs.has(followerUuid)) return undefined;
