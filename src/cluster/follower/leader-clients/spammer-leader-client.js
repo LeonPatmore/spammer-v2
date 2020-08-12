@@ -20,15 +20,16 @@ class SpammerLeaderClientV1 {
                 if (result.code != statusCodes.OK) {
                     throw new Error(`Unexpected response from the leader, ${result.code} ${result.body}!`);
                 }
-                let jobs = [];
-                if (result.body.hasOwnProperty('job')) {
-                    jobs = [
-                        {
-                            uuid: result.body.job.uuid,
-                            config: result.body.job.config,
-                            type: result.body.job.type,
-                        },
-                    ];
+                const jobs = [];
+                if (result.body.hasOwnProperty('jobs')) {
+                    for (const job of result.body.jobs) {
+                        const jobToAdd = {
+                            uuid: job.uuid,
+                            config: job.config,
+                            type: job.type,
+                        };
+                        jobs.push(jobToAdd);
+                    }
                 }
                 return {
                     uuid: result.body.uuid,

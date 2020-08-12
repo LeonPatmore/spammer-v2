@@ -161,15 +161,15 @@ class SpammerLeader {
      * @param {string} available    The availability of the follower, indicating if the follower can run a performance test.
      */
     updateFollower(followerUuid, status, available) {
-        const activeJob = this.followerJobRepository.getActiveJobForFollower(followerUuid);
+        const activeJobs = this.followerJobRepository.getActiveJobsForFollower(followerUuid);
         this.connectedFollowers.set(followerUuid, {
             uuid: followerUuid,
             available: available,
             status: status,
             lastUpdate: new Date(),
-            job: activeJob,
+            jobs: activeJobs,
         });
-        return activeJob;
+        return activeJobs;
     }
 
     /**

@@ -89,7 +89,7 @@ class SpammerLeaderHttp extends SpammerLeader {
                 if (!req.body.hasOwnProperty('available'))
                     invalidParamErrorBuilder.withInvalidParam('available', InvalidParamErrorBuilder.missing);
                 invalidParamErrorBuilder.throwIfInvalidParams();
-                const activeJob = this.updateFollower(
+                const activeJobs = this.updateFollower(
                     req.body.uuid,
                     req.body.status,
                     req.body.available,
@@ -98,16 +98,8 @@ class SpammerLeaderHttp extends SpammerLeader {
                 );
                 const responseConfig = {
                     uuid: this.uuid,
+                    jobs: activeJobs,
                 };
-                if (activeJob)
-                    // TODO Test this
-                    Object.assign(responseConfig, {
-                        job: {
-                            uuid: activeJob.uuid,
-                            type: activeJob.type,
-                            config: activeJob.config,
-                        },
-                    });
                 res.json(responseConfig).end();
             }
         );

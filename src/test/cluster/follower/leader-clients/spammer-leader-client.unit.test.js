@@ -19,17 +19,20 @@ describe('V1 Tests', () => {
             status: 200,
             data: {
                 uuid: 'leader-uuid',
-                job: {
-                    uuid: 'job-uuid',
-                    config: 'some-config',
-                    type: 'some-type',
-                },
+                jobs: [
+                    {
+                        uuid: 'job-uuid',
+                        config: 'some-config',
+                        type: 'some-type',
+                    },
+                ],
             },
         });
 
         const response = await v1.updateLeader('socket-address', 'uuid', 'some-status', false);
         expect(response.uuid).toEqual('leader-uuid');
         expect(response.jobs).toHaveLength(1);
+        console.log(response.jobs);
         expect(response.jobs[0].uuid).toEqual('job-uuid');
         expect(response.jobs[0].config).toEqual('some-config');
         expect(response.jobs[0].type).toEqual('some-type');
