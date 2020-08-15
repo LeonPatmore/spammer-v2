@@ -3,6 +3,7 @@ const expressPinoLogger = require('express-pino-logger');
 const logger = require('../logger/application-logger');
 const expressPing = require('express-ping');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 class HttpServer {
     /**
@@ -14,6 +15,7 @@ class HttpServer {
         logger.info(`Starting HTTP server, host [ ${hostname} ], port [ ${port} ]`);
         this.express = express();
         this.express.use(express.json());
+        this.express.use(cors());
         this.express.use(
             expressPinoLogger({
                 autoLogging: {
