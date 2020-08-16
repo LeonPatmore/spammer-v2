@@ -7,3 +7,4 @@ coverage
 README.md
 reports
 Dockerfile
+docs/**
