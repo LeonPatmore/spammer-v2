@@ -52,6 +52,24 @@ class SpammerLeaderHttp extends SpammerLeader {
         );
 
         this.httpServer.addGetHandler(
+            `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performancePath}`,
+            (req, res) => {
+                const performanceTests = this.performanceTests.map(test => {
+                    return {
+                        uuid: test.uuid,
+                        metrics_config: test.metricsConfig,
+                        status: test.status,
+                        followers: test.followers,
+                        run_jobs: test.runJobs,
+                        plan_jobs: test.planJobs,
+                        result: test.result,
+                    };
+                });
+                res.json({ performance_tests: performanceTests }).end();
+            }
+        );
+
+        this.httpServer.addGetHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performancePath}/:performanceUuid`,
             (req, res) => {
                 const performanceUuid = req.params.performanceUuid;
