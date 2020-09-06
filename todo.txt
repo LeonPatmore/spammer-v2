@@ -1,0 +1,3 @@
+06/09/2020 Support timed metrics @metrics @feature 
+06/09/2020 Support body in http interface @feature
+06/09/2020 Fix issue with metrics not being created on timeouts @bug @metrics
