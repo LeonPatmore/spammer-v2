@@ -24,10 +24,11 @@ class LeaderAlreadyConnected extends HttpAwareError {
 class SpammerFollower {
     /**
      * Manages jobs from Spammer leaders.
+     * @param {JobsHandledPersistence} jobsHandledPersistence
      * @param {String} initialLeaderSocketAddress   [Optional] A leader socket address to automatically connect to.
      * @param {String} initialLeaderVersion         [Optional] A leader version.
      */
-    constructor(initialLeaderSocketAddress, initialLeaderVersion) {
+    constructor(jobsHandledPersistence, initialLeaderSocketAddress, initialLeaderVersion) {
         this.uuid = uuidv4();
         this._resetPerformanceRun();
         this.leaders = new Map();
@@ -44,7 +45,8 @@ class SpammerFollower {
         this.jobHandlers[jobTypes.PERFORMANCE_PLAN] = (_0, jobConfig, _1) => this._handlePerformancePlan(jobConfig);
         this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
             this._handlePerformanceRun(jobUuid, jobConfig, leaderUuid);
-        this.jobsHandled = [];
+
+        this.jobsHandledPersistence = jobsHandledPersistence;
 
         if (initialLeaderSocketAddress) {
             logger.info(
@@ -62,7 +64,7 @@ class SpammerFollower {
      * @param {String} jobType       The job type.
      */
     handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
-        if (this.jobsHandled.indexOf(jobUuid) > -1) {
+        if (this.jobsHandledPersistence.hasJob(jobUuid)) {
             logger.info(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
             return;
         }
@@ -76,7 +78,7 @@ class SpammerFollower {
         const { status, result } = this.jobHandlers[jobType](jobUuid, jobConfig, leaderUuid);
         logger.info(`Setting job status to [ ${status} ] with id [ ${jobUuid} ] and result [ ${result} ]`);
         this._pushJobStatusUpdate(leaderUuid, jobUuid, status, result);
-        this.jobsHandled.push(jobUuid);
+        this.jobsHandledPersistence.add(jobUuid);
     }
 
     /**

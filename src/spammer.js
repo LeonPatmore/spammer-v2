@@ -20,9 +20,11 @@ class Spammer {
         const loadSpammerFollower = () => {
             const initialLeaderSocketAddress = configuration.get('initialLeaderSocketAddress');
             const initialLeaderVersion = configuration.get('initialLeaderVersion');
+            const jobsHandledPersistence = new JobsHandledPersistenceNaive();
             const spammerFollowerHttp = new SpammerFollowerHttp(
                 host,
                 port,
+                jobsHandledPersistence,
                 initialLeaderSocketAddress,
                 initialLeaderVersion
             );
