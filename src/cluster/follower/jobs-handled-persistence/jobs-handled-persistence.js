@@ -1,9 +1,4 @@
-class JobsHandledPersistence {
-    add(jobUuid) {}
-    hasJob(jobUuid) {}
-}
-
-class JobsHandledPersistenceNaive extends JobsHandledPersistence {
+class JobsHandledPersistenceNaive {
     constructor() {
         this.jobsHandled = [];
     }

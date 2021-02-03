@@ -3,10 +3,10 @@ const logger = require('../../logger/application-logger');
 const { HttpAwareError } = require('../spammer-http-error-handler');
 const httpStatus = require('http-status-codes');
 const requireFromString = require('require-from-string');
-const spammerLeaderClients = require('./leader-clients/spammer-leader-client');
 const { followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 const getRunConfiguration = require('./interfaces/run-configuration/run-configurations');
+const { ConnectedLeaders } = require('./connected-leaders/connected-leaders');
 
 class LeaderAlreadyConnected extends HttpAwareError {
     /**
@@ -29,11 +29,14 @@ class SpammerFollower {
      * @param {String} initialLeaderVersion         [Optional] A leader version.
      */
     constructor(jobsHandledPersistence, initialLeaderSocketAddress, initialLeaderVersion) {
-        this.uuid = uuidv4();
+        this.uuidHolder = { uuid: uuidv4() };
+        this.statusHolder = {
+            status: 'TODO',
+            available: true,
+        };
+        this.connectedLeaders = new ConnectedLeaders(this.uuidHolder, this.statusHolder, this.handleJob);
+
         this._resetPerformanceRun();
-        this.leaders = new Map();
-        this.status = 'hi';
-        this.available = true;
         this.jobUpdateQueue = [];
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
         this.updateLeadersInterval = setInterval(() => this._updateLeaders(), SpammerFollower.updateLeadersDelayMs);
