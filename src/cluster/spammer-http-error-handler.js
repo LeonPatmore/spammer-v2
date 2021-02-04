@@ -12,6 +12,10 @@ class HttpAwareError extends Error {
     getErrorJson() {
         return [this.message];
     }
+
+    getHttpCode() {
+        return httpStatus.INTERNAL_SERVER_ERROR;
+    }
 }
 
 class InvalidParamErrorBuilder {

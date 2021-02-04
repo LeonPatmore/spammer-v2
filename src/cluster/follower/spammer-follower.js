@@ -1,25 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../logger/application-logger');
-const { HttpAwareError } = require('../spammer-http-error-handler');
-const httpStatus = require('http-status-codes');
 const requireFromString = require('require-from-string');
 const { followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 const getRunConfiguration = require('./interfaces/run-configuration/run-configurations');
 const { ConnectedLeaders } = require('./connected-leaders/connected-leaders');
-
-class LeaderAlreadyConnected extends HttpAwareError {
-    /**
-     * An error for when you are trying to connect a leader which is already connected to this follower.
-     * @param {String} leaderUuid   The id of the leader you are trying to connect.
-     */
-    constructor(leaderUuid) {
-        super(`leader with id ${leaderUuid} is already connected!`);
-    }
-    getHttpCode() {
-        return httpStatus.BAD_REQUEST;
-    }
-}
 
 class SpammerFollower {
     /**
@@ -39,7 +24,7 @@ class SpammerFollower {
         this._resetPerformanceRun();
         this.jobUpdateQueue = [];
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
-        this.updateLeadersInterval = setInterval(() => this._updateLeaders(), SpammerFollower.updateLeadersDelayMs);
+
         this.sendJobUpdatesInterval = setInterval(
             () => this._sendJobUpdates(),
             SpammerFollower.sendJobStatusUpdatesDelayMs
@@ -71,7 +56,7 @@ class SpammerFollower {
             logger.info(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
             return;
         }
-        if (!this.leaders.has(leaderUuid))
+        if (!this.connectedLeaders.hasUuid(leaderUuid))
             throw new Error(`Could not handle job: Leader with ID [ ${leaderUuid} ] not found!`);
         if (!this.jobHandlers.hasOwnProperty(jobType)) {
             logger.warn(`Do not know how to handle job type [ ${jobType} ]`);
@@ -139,21 +124,9 @@ class SpammerFollower {
         });
     }
 
-    /**
-     * Send updates to the connected leaders.
-     */
-    async _updateLeaders() {
-        for (let leader of this.leaders.values()) {
-            const { jobs } = await spammerLeaderClients[leader.version].updateLeader(
-                leader.socketAddress,
-                this.uuid,
-                this.status,
-                this.available
-            );
-            for (const job of jobs) {
-                this.handleJob(leader.uuid, job.uuid, job.config, job.type);
-            }
-        }
+    async addLeader(socketAddress, version) {
+        const actualVersion = version || SpammerFollower.version;
+        await this.connectedLeaders.addLeader(socketAddress, actualVersion);
     }
 
     /**
@@ -165,7 +138,7 @@ class SpammerFollower {
             logger.info(
                 `Sending status update for id [ ${jobUpdate.jobUuid} ], status [ ${jobUpdate.jobStatus} ] and result [ ${jobUpdate.jobResult} ]`
             );
-            const leader = this.leaders.get(jobUpdate.leaderUuid);
+            const leader = this.connectedLeaders.getLeader(jobUpdate.leaderUuid);
             await spammerLeaderClients[leader.version].updateJobStatus(
                 leader.socketAddress,
                 this.uuid,
@@ -175,27 +148,6 @@ class SpammerFollower {
             );
             this.jobUpdateQueue.splice(i, 1);
         }
-    }
-
-    /**
-     * Add a leader to the follower.
-     * @param {String} socketAddress    Socket address of the leader.
-     * @param {String} version          [Optional] Version of the leader. If not given, will use the version of the follower.
-     */
-    async addLeader(socketAddress, version) {
-        const actualVersion = version || SpammerFollower.version;
-        const { uuid } = await spammerLeaderClients[actualVersion].updateLeader(
-            socketAddress,
-            this.uuid,
-            this.status,
-            this.available
-        );
-        if (this.leaders.has(uuid)) throw new LeaderAlreadyConnected(uuid);
-        this.leaders.set(uuid, {
-            socketAddress: socketAddress,
-            version: actualVersion,
-            uuid: uuid,
-        });
     }
 
     /**
@@ -209,13 +161,12 @@ class SpammerFollower {
     }
 
     close() {
-        clearInterval(this.updateLeadersInterval);
+        this.connectedLeaders.close();
         clearInterval(this.sendJobUpdatesInterval);
     }
 }
 
 SpammerFollower.version = 'v1';
-SpammerFollower.updateLeadersDelayMs = 5000;
 SpammerFollower.sendJobStatusUpdatesDelayMs = 1000;
 
 module.exports = { SpammerFollower };
