@@ -28,6 +28,10 @@ Running an individual test:
 
 `npx jest -t <test_name>`
 
+or
+
+`npm test -- -t <test_name>`
+
 Running a test file:
 
 `npx jest test/spammer.unit.test.js`

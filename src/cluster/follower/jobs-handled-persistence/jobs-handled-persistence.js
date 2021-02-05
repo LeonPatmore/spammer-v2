@@ -11,3 +11,5 @@ class JobsHandledPersistenceNaive {
         return this.jobsHandled.indexOf(jobUuid) > -1;
     }
 }
+
+module.exports = { JobsHandledPersistenceNaive };

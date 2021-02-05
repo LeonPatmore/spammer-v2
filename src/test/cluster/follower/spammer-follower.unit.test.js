@@ -1,11 +1,10 @@
 const { SpammerFollower } = require('../../../cluster/follower/spammer-follower');
 const { followerJobStatus } = require('../../../cluster/leader/follower-job');
 const jobTypes = require('../../../cluster/job-types');
-const spammerLeaderClients = require('../../../cluster/follower/leader-clients/spammer-leader-client');
 const sleep = require('../../../utils/sleep');
-jest.mock('../../../cluster/follower/leader-clients/spammer-leader-client');
-
-spammerLeaderClients.v1.updateJobStatus.mockImplementation(() => {});
+const { ConnectedLeaders } = require('../../../cluster/follower/connected-leaders/connected-leaders');
+const logger = require('../../../logger/logger');
+jest.mock('../../../cluster/follower/connected-leaders/connected-leaders');
 
 const getNexmoJobUpdate = async (delay = 100, attempts = 60) => {
     for (let i = 0; i < attempts; i++) {
@@ -156,9 +155,12 @@ describe('Handle job tests', () => {
 describe('Initial leader tests', () => {
     let spammerFollower;
 
-    const waitForLeader = async (leaderUuid, delay = 100, attempts = 60) => {
+    const waitForLeader = async (spammerFollower, delay = 100, attempts = 20) => {
         for (let i = 0; i < attempts; i++) {
-            if (spammerFollower.leaders.has(leaderUuid)) return spammerFollower.leaders.get(leaderUuid);
+            try {
+                expect(spammerFollower.connectedLeaders.addLeader).toBeCalledWith('socket.address:1234', 'v1');
+                return;
+            } catch (ignore) {}
             await sleep(delay);
         }
         throw new Error('Could not find leader!');
@@ -169,18 +171,14 @@ describe('Initial leader tests', () => {
     });
 
     it('WHEN inital leader given with no version THEN adds the leader with follower version', async () => {
-        spammerLeaderClients.v1.updateLeader.mockImplementation(() => {
-            return {
-                uuid: 'some-leader-uuid',
-            };
-        });
+        spammerFollower = new SpammerFollower(null, 'socket.address:1234');
 
-        spammerFollower = new SpammerFollower('socket.address:1234');
+        await waitForLeader(spammerFollower);
 
-        const leader = await waitForLeader('some-leader-uuid');
-        expect(leader.uuid).toEqual('some-leader-uuid');
-        expect(leader.version).toEqual(SpammerFollower.version);
-        expect(leader.socketAddress).toEqual('socket.address:1234');
+        // const leader = await waitForLeader('some-leader-uuid');
+        // expect(leader.uuid).toEqual('some-leader-uuid');
+        // expect(leader.version).toEqual(SpammerFollower.version);
+        // expect(leader.socketAddress).toEqual('socket.address:1234');
     });
 
     it('WHEN inital leader given with version THEN adds the leader with follower version', async () => {

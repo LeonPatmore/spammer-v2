@@ -35,7 +35,7 @@ it('Ensure spammer loads follower with correct values', () => {
     jest.isolateModules(() => {
         spammer = require('../spammer');
     });
-    expect(SpammerFollowerHttp).toBeCalledWith('0.0.0.0', 1234, undefined, undefined);
+    expect(SpammerFollowerHttp).toBeCalledWith('0.0.0.0', 1234, expect.anything(), undefined, undefined);
 });
 
 it('Ensure spammer loads follower with correct initial leader values', () => {
@@ -48,5 +48,5 @@ it('Ensure spammer loads follower with correct initial leader values', () => {
     jest.isolateModules(() => {
         spammer = require('../spammer');
     });
-    expect(SpammerFollowerHttp).toBeCalledWith('0.0.0.0', 1234, 'initial.socket.address:1234', 'v1');
+    expect(SpammerFollowerHttp).toBeCalledWith('0.0.0.0', 1234, expect.anything(), 'initial.socket.address:1234', 'v1');
 });

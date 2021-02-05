@@ -2,6 +2,7 @@ const configuration = require('./configuration/configuration');
 const SpammerFollowerHttp = require('./cluster/follower/spammer-follower-http');
 const SpammerLeaderHttp = require('./cluster/leader/spammer-leader-http');
 const logger = require('./logger/application-logger');
+const { JobsHandledPersistenceNaive } = require('./cluster/follower/jobs-handled-persistence/jobs-handled-persistence');
 
 class Spammer {
     /**
