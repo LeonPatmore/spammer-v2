@@ -1,6 +1,7 @@
 const { SpammerFollower } = require('./spammer-follower');
 const HttpServer = require('../../server/http-server');
 const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
+const logger = require('../../logger/logger');
 
 class SpammerFollowerHttp extends SpammerFollower {
     /**
@@ -26,6 +27,7 @@ class SpammerFollowerHttp extends SpammerFollower {
                     }
                     await this.addLeader(req.body.socket_address);
                 } catch (e) {
+                    logger.info(e.message);
                     next(e);
                 }
                 res.end();

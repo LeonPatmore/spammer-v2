@@ -54,9 +54,9 @@ describe('API Tests', () => {
 
         expect(response.status).toEqual(200);
 
-        expect(spammerFollowerInstance.leaders.has('leader-id')).toBeTruthy();
-        expect(spammerFollowerInstance.leaders.get('leader-id').uuid).toEqual('leader-id');
-        expect(spammerFollowerInstance.leaders.get('leader-id').version).toEqual('v1');
-        expect(spammerFollowerInstance.leaders.get('leader-id').socketAddress).toEqual('my.host:1234');
+        const leader = spammerFollowerInstance.connectedLeaders.getLeader('leader-id');
+        expect(leader.uuid).toEqual('leader-id');
+        expect(leader.version).toEqual('v1');
+        expect(leader.socketAddress).toEqual('my.host:1234');
     });
 });

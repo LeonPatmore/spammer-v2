@@ -49,7 +49,7 @@ class ConnectedLeaders {
             this.statusHolder.status,
             this.statusHolder.available
         );
-        if (this.connectedLeaders.hasUuid(uuid)) throw new LeaderAlreadyConnected(uuid);
+        if (this.hasUuid(uuid)) throw new LeaderAlreadyConnected(uuid);
         this.leaders.set(uuid, {
             socketAddress: socketAddress,
             version: version,

@@ -126,7 +126,7 @@ class SpammerFollower {
 
     async addLeader(socketAddress, version) {
         const actualVersion = version || SpammerFollower.version;
-        logger.info('Adding leader to ' + this.connectedLeaders);
+        logger.info(`Adding leader with socket address [ ${socketAddress} ] and version [ ${actualVersion} ]`);
         await this.connectedLeaders.addLeader(socketAddress, actualVersion);
     }
 
