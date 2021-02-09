@@ -38,7 +38,7 @@ describe('API Tests', () => {
     });
 
     it('Test post connect endpoint WHEN leader already connected THEN returns bad response', async () => {
-        spammerFollowerInstance.leaders.set('leader-id', {});
+        await spammerFollowerInstance.connectedLeaders.addLeader('my.host:1234', 'v1');
 
         const response = await sendRequest(spammerPort, 'POST', 'v1/connect', {
             socket_address: 'my.host:1234',
