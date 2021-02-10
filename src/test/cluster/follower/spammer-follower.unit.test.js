@@ -2,30 +2,27 @@ const { SpammerFollower } = require('../../../cluster/follower/spammer-follower'
 const { followerJobStatus } = require('../../../cluster/leader/follower-job');
 const jobTypes = require('../../../cluster/job-types');
 const sleep = require('../../../utils/sleep');
-const { ConnectedLeaders } = require('../../../cluster/follower/connected-leaders/connected-leaders');
-const logger = require('../../../logger/logger');
+const JobsHandledPersistenceMock = require('./jobs-handled-persistence-mock');
 jest.mock('../../../cluster/follower/connected-leaders/connected-leaders');
-
-const getNexmoJobUpdate = async (delay = 100, attempts = 60) => {
-    for (let i = 0; i < attempts; i++) {
-        const calls = spammerLeaderClients.v1.updateJobStatus.mock.calls.length;
-        if (calls > 0) {
-            return spammerLeaderClients.v1.updateJobStatus.mock.calls[0];
-        }
-        await sleep(delay);
-    }
-    throw new Error('Could not find job update!');
-};
 
 describe('Handle job tests', () => {
     let spammerFollower;
 
     beforeEach(() => {
-        spammerFollower = new SpammerFollower();
-        spammerFollower.leaders.set('a-leader-id', {
-            socketAddress: 'a-socket-address',
-            version: 'v1',
-            uuid: 'a-leader-id',
+        spammerFollower = new SpammerFollower(new JobsHandledPersistenceMock());
+        spammerFollower.connectedLeaders.getLeader.mockImplementation(uuid => {
+            if (uuid == 'a-leader-id') {
+                return {
+                    socketAddress: 'a-socket-address',
+                    version: 'v1',
+                    uuid: 'a-leader-id',
+                };
+            } else {
+                throw new UnknownLeaderError(uuid);
+            }
+        });
+        spammerFollower.connectedLeaders.hasUuid.mockImplementation(uuid => {
+            return uuid == 'a-leader-id';
         });
     });
 
@@ -34,11 +31,11 @@ describe('Handle job tests', () => {
     });
 
     it('WHEN job has already been handled THEN do nothing', () => {
-        spammerFollower.jobsHandled.push('some-id');
+        spammerFollower.jobsHandledPersistence.hasJob.mockReturnValue(true);
 
-        spammerFollower.handleJob('leader-id', 'some-id', {}, 'job-type');
+        const returnedValue = spammerFollower.handleJob('leader-id', 'some-id', {}, 'job-type');
 
-        expect(spammerFollower.jobUpdateQueue.length).toEqual(0);
+        expect(returnedValue).toBeUndefined();
     });
 
     it('WHEN unknown leader THEN throw error', () => {
@@ -46,36 +43,22 @@ describe('Handle job tests', () => {
     });
 
     it('WHEN unknown how to handle job THEN reject job', async () => {
-        spammerFollower.handleJob('a-leader-id', 'job-id', {}, 'some-job');
+        const { status } = spammerFollower.handleJob('a-leader-id', 'job-id', {}, 'some-job');
 
-        const jobUpdate = await getNexmoJobUpdate();
-        expect(jobUpdate).toEqual([
-            'a-socket-address',
-            spammerFollower.uuid,
-            'job-id',
-            followerJobStatus.REJECTED,
-            undefined,
-        ]);
+        expect(status).toEqual(followerJobStatus.REJECTED);
     });
 
     describe('Handle performance plan', () => {
         it('WHEN already running performance test THEN reject job', async () => {
             spammerFollower.performanceRun.uuid = 'some-run-id';
 
-            spammerFollower.handleJob('a-leader-id', 'job-id', {}, jobTypes.PERFORMANCE_PLAN);
+            const { status } = spammerFollower.handleJob('a-leader-id', 'job-id', {}, jobTypes.PERFORMANCE_PLAN);
 
-            const jobUpdate = await getNexmoJobUpdate();
-            expect(jobUpdate).toEqual([
-                'a-socket-address',
-                spammerFollower.uuid,
-                'job-id',
-                followerJobStatus.REJECTED,
-                undefined,
-            ]);
+            expect(status).toEqual(followerJobStatus.REJECTED);
         });
 
         it('WHEN valid THEN set performance run and complete job', async () => {
-            spammerFollower.handleJob(
+            const { status } = spammerFollower.handleJob(
                 'a-leader-id',
                 'job-id',
                 {
@@ -85,14 +68,7 @@ describe('Handle job tests', () => {
                 jobTypes.PERFORMANCE_PLAN
             );
 
-            const jobUpdate = await getNexmoJobUpdate();
-            expect(jobUpdate).toEqual([
-                'a-socket-address',
-                spammerFollower.uuid,
-                'job-id',
-                followerJobStatus.COMPLETED,
-                undefined,
-            ]);
+            expect(status).toEqual(followerJobStatus.COMPLETED);
 
             expect(spammerFollower.performanceRun.uuid).toEqual('some-performance-id');
             expect(spammerFollower.performanceRun.run).toBeTruthy();
@@ -102,7 +78,7 @@ describe('Handle job tests', () => {
     describe('Handle performance run', () => {
         it('WHEN performance id does not match existing THEN reject job', async () => {
             spammerFollower.performanceRun.uuid = 'some-id';
-            spammerFollower.handleJob(
+            const { status } = spammerFollower.handleJob(
                 'a-leader-id',
                 'job-id',
                 {
@@ -110,15 +86,7 @@ describe('Handle job tests', () => {
                 },
                 jobTypes.PERFORMANCE_RUN
             );
-
-            const jobUpdate = await getNexmoJobUpdate();
-            expect(jobUpdate).toEqual([
-                'a-socket-address',
-                spammerFollower.uuid,
-                'job-id',
-                followerJobStatus.REJECTED,
-                undefined,
-            ]);
+            expect(status).toEqual(followerJobStatus.REJECTED);
         });
 
         it('WHEN valid THEN start performance run and accept job', async () => {
@@ -139,15 +107,6 @@ describe('Handle job tests', () => {
             );
 
             expect(performanceRunFunction).toBeCalledTimes(1);
-
-            const jobUpdate = await getNexmoJobUpdate();
-            expect(jobUpdate).toEqual([
-                'a-socket-address',
-                spammerFollower.uuid,
-                'job-id',
-                followerJobStatus.ACCEPTED,
-                undefined,
-            ]);
         });
     });
 });
@@ -155,10 +114,10 @@ describe('Handle job tests', () => {
 describe('Initial leader tests', () => {
     let spammerFollower;
 
-    const waitForLeader = async (spammerFollower, delay = 100, attempts = 20) => {
+    const waitForLeader = async (spammerFollower, version, delay = 100, attempts = 20) => {
         for (let i = 0; i < attempts; i++) {
             try {
-                expect(spammerFollower.connectedLeaders.addLeader).toBeCalledWith('socket.address:1234', 'v1');
+                expect(spammerFollower.connectedLeaders.addLeader).toBeCalledWith('socket.address:1234', version);
                 return;
             } catch (ignore) {}
             await sleep(delay);
@@ -173,26 +132,12 @@ describe('Initial leader tests', () => {
     it('WHEN inital leader given with no version THEN adds the leader with follower version', async () => {
         spammerFollower = new SpammerFollower(null, 'socket.address:1234');
 
-        await waitForLeader(spammerFollower);
-
-        // const leader = await waitForLeader('some-leader-uuid');
-        // expect(leader.uuid).toEqual('some-leader-uuid');
-        // expect(leader.version).toEqual(SpammerFollower.version);
-        // expect(leader.socketAddress).toEqual('socket.address:1234');
+        await waitForLeader(spammerFollower, SpammerFollower.version);
     });
 
     it('WHEN inital leader given with version THEN adds the leader with follower version', async () => {
-        spammerLeaderClients.v1.updateLeader.mockImplementation(() => {
-            return {
-                uuid: 'some-leader-uuid',
-            };
-        });
+        spammerFollower = new SpammerFollower(null, 'socket.address:1234', 'v2');
 
-        spammerFollower = new SpammerFollower('socket.address:1234', 'v1');
-
-        const leader = await waitForLeader('some-leader-uuid');
-        expect(leader.uuid).toEqual('some-leader-uuid');
-        expect(leader.version).toEqual('v1');
-        expect(leader.socketAddress).toEqual('socket.address:1234');
+        await waitForLeader(spammerFollower, 'v2');
     });
 });

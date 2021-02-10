@@ -60,13 +60,13 @@ class SpammerFollower {
             throw new Error(`Could not handle job: Leader with ID [ ${leaderUuid} ] not found!`);
         if (!this.jobHandlers.hasOwnProperty(jobType)) {
             logger.warn(`Do not know how to handle job type [ ${jobType} ]`);
-            this._pushJobStatusUpdate(leaderUuid, jobUuid, followerJobStatus.REJECTED);
-            return;
+            return { status: followerJobStatus.REJECTED };
         }
         const { status, result } = this.jobHandlers[jobType](jobUuid, jobConfig, leaderUuid);
         logger.info(`Setting job status to [ ${status} ] with id [ ${jobUuid} ] and result [ ${result} ]`);
         this._pushJobStatusUpdate(leaderUuid, jobUuid, status, result);
         this.jobsHandledPersistence.add(jobUuid);
+        return { status, result };
     }
 
     /**
