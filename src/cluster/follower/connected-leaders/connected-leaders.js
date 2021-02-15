@@ -4,7 +4,7 @@ const httpStatus = require('http-status-codes');
 
 class UnknownLeaderError extends HttpAwareError {
     constructor(leaderUuid) {
-        super(`Unknown leader with uuid [ ${leaderUuid} ]`);
+        super(`unknown leader with uuid [ ${leaderUuid} ]`);
     }
     getHttpCode() {
         return httpStatus.BAD_REQUEST;
@@ -17,7 +17,7 @@ class LeaderAlreadyConnected extends HttpAwareError {
      * @param {String} leaderUuid   The id of the leader you are trying to connect.
      */
     constructor(leaderUuid) {
-        super(`leader with id ${leaderUuid} is already connected!`);
+        super(`leader with id [ ${leaderUuid} ] is already connected!`);
     }
     getHttpCode() {
         return httpStatus.BAD_REQUEST;
@@ -81,4 +81,4 @@ class ConnectedLeaders {
 
 ConnectedLeaders.updateLeadersDelayMs = 5000;
 
-module.exports = { ConnectedLeaders };
+module.exports = { ConnectedLeaders, UnknownLeaderError, LeaderAlreadyConnected };
