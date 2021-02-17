@@ -16,17 +16,17 @@ spammerLeaderClients.v1.updateLeader.mockImplementation(() => {
 
 const spammerPort = 5634;
 
+let spammerFollowerInstance;
+
+beforeEach(() => {
+    spammerFollowerInstance = new SpammerFollowerHttp('127.0.0.1', spammerPort);
+});
+
+afterEach(() => {
+    spammerFollowerInstance.close();
+});
+
 describe('API Tests', () => {
-    let spammerFollowerInstance;
-
-    beforeEach(() => {
-        spammerFollowerInstance = new SpammerFollowerHttp('127.0.0.1', spammerPort);
-    });
-
-    afterEach(() => {
-        spammerFollowerInstance.close();
-    });
-
     it('Test ping endpoint WHEN requested THEN returns ok response', async () => {
         const pingResponse = await sendRequest(spammerPort, 'GET', 'ping');
         expect(pingResponse.status).toEqual(200);

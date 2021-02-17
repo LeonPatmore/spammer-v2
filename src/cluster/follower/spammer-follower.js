@@ -5,6 +5,7 @@ const { followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 const getRunConfiguration = require('./interfaces/run-configuration/run-configurations');
 const { ConnectedLeaders } = require('./connected-leaders/connected-leaders');
+const { JobsHandledPersistenceNaive } = require('./jobs-handled-persistence/jobs-handled-persistence');
 
 class SpammerFollower {
     /**
@@ -19,7 +20,14 @@ class SpammerFollower {
             status: 'TODO',
             available: true,
         };
-        this.connectedLeaders = new ConnectedLeaders(this.uuidHolder, this.statusHolder, this.handleJob);
+        this.jobsHandledPersistence = jobsHandledPersistence || new JobsHandledPersistenceNaive();
+        this.connectedLeaders = new ConnectedLeaders(
+            this.uuidHolder,
+            this.statusHolder,
+            (leaderUuid, jobUuid, jobConfig, jobType) => {
+                return this.handleJob(leaderUuid, jobUuid, jobConfig, jobType);
+            }
+        );
 
         this._resetPerformanceRun();
         logger.info(`Starting follower with ID [ ${this.uuid} ]`);
@@ -29,7 +37,8 @@ class SpammerFollower {
         this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
             this._handlePerformanceRun(jobUuid, jobConfig, leaderUuid);
 
-        this.jobsHandledPersistence = jobsHandledPersistence;
+        logger.info('jobs handled: ' + jobsHandledPersistence);
+        logger.info('jobs handled: ' + this.jobsHandledPersistence);
 
         if (initialLeaderSocketAddress) {
             logger.info(
@@ -59,7 +68,6 @@ class SpammerFollower {
         }
         const { status, result } = this.jobHandlers[jobType](jobUuid, jobConfig, leaderUuid);
         logger.info(`Setting job status to [ ${status} ] with id [ ${jobUuid} ] and result [ ${result} ]`);
-        this.connectedLeaders.pushJobStatusUpdate(leaderUuid, jobUuid, status, result);
         this.jobsHandledPersistence.add(jobUuid);
         return { status, result };
     }

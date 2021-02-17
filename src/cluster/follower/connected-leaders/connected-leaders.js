@@ -1,6 +1,8 @@
 const spammerLeaderClients = require('../leader-clients/spammer-leader-client');
 const { HttpAwareError } = require('../../spammer-http-error-handler');
 const httpStatus = require('http-status-codes');
+const logger = require('../../../logger/logger');
+const { util } = require('chai');
 
 class UnknownLeaderError extends Error {
     constructor(leaderUuid) {
@@ -71,7 +73,8 @@ class ConnectedLeaders {
                 this.statusHolder.available
             );
             for (const job of jobs) {
-                jobHandler(leader.uuid, job.uuid, job.config, job.type);
+                const { status, result } = this.jobHandler(leader.uuid, job.uuid, job.config, job.type);
+                this.pushJobStatusUpdate(leader.uuid, job.uuid, status, result);
             }
         }
     }
@@ -119,7 +122,7 @@ class ConnectedLeaders {
     }
 }
 
-ConnectedLeaders.updateLeadersDelayMs = 5000;
+ConnectedLeaders.updateLeadersDelayMs = 1000;
 ConnectedLeaders.sendJobStatusUpdatesDelayMs = 1000;
 
 module.exports = { ConnectedLeaders, UnknownLeaderError, LeaderAlreadyConnected };
