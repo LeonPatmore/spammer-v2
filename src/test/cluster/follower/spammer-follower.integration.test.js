@@ -2,7 +2,6 @@ const { SpammerFollower } = require('../../../cluster/follower/spammer-follower'
 const spammerLeaderClients = require('../../../cluster/follower/leader-clients/spammer-leader-client');
 const sleep = require('../../../utils/sleep');
 const { AssertionError } = require('chai');
-const spammerLeaderClient = require('../../../cluster/follower/leader-clients/spammer-leader-client');
 jest.mock('../../../cluster/follower/leader-clients/spammer-leader-client');
 
 let spammerFollowerInstance;

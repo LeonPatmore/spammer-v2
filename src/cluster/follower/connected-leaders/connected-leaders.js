@@ -2,7 +2,6 @@ const spammerLeaderClients = require('../leader-clients/spammer-leader-client');
 const { HttpAwareError } = require('../../spammer-http-error-handler');
 const httpStatus = require('http-status-codes');
 const logger = require('../../../logger/logger');
-const { util } = require('chai');
 
 class UnknownLeaderError extends Error {
     constructor(leaderUuid) {
