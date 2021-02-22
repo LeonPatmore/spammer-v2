@@ -58,7 +58,7 @@ class SpammerFollower {
     handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
         if (this.jobsHandledPersistence.hasJob(jobUuid)) {
             logger.info(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
-            return;
+            return {};
         }
         if (!this.connectedLeaders.hasUuid(leaderUuid))
             throw new Error(`Could not handle job: Leader with ID [ ${leaderUuid} ] not found!`);

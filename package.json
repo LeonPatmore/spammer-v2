@@ -31,6 +31,7 @@
         "mock-http-server": "^1.4.2",
         "oaf-side-effects": "^3.0.0",
         "patch-package": "^6.2.0",
+        "portfinder": "^1.0.28",
         "prettier": "1.19.1",
         "sinon": "^9.0.0"
     },
