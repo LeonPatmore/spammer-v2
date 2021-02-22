@@ -35,7 +35,7 @@ describe('Handle job tests', () => {
 
         const returnedValue = spammerFollower.handleJob('leader-id', 'some-id', {}, 'job-type');
 
-        expect(returnedValue).toBeUndefined();
+        expect(returnedValue).toEqual({});
     });
 
     it('WHEN unknown leader THEN throw error', () => {
