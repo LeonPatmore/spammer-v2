@@ -13,12 +13,37 @@
         "executionRoleArn": "arn:aws:iam::136306849848:role/ecsTaskExecutionRole",
         "containerDefinitions": [
           {
-            "portMappings": [],
             "cpu": 0,
             "environment": [],
             "image": "leonpatmore/spammer-v2:4c6c21053e3fa16e53c9efbfb33cc01b024b5465",
             "essential": true,
-            "name": "leader"
+            "name": "leader",
+            "PortMappings": [{
+              "ContainerPort": 5435
+            }]
+          },
+          {
+            "cpu": 0,
+            "environment": [
+              {
+                "Name": "SPAMMER_TYPE",
+                "Value": "follower"
+              },
+              {
+                "Name": "SPAMMER_INITIAL_LEADER_SOCKET_ADDRESS",
+                "Value": "localhost:5435"
+              },
+              {
+                "Name": "SPAMMER_PORT",
+                "Value": "1234"
+              }
+            ],
+            "image": "leonpatmore/spammer-v2:4c6c21053e3fa16e53c9efbfb33cc01b024b5465",
+            "essential": true,
+            "name": "follower",
+            "PortMappings": [{
+              "ContainerPort": 1234
+            }]
           }
         ],
         "memory": "512",
