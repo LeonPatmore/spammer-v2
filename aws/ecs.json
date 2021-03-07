@@ -13,7 +13,6 @@
         "executionRoleArn": "arn:aws:iam::136306849848:role/ecsTaskExecutionRole",
         "containerDefinitions": [
           {
-            "cpu": 0,
             "environment": [],
             "image": "leonpatmore/spammer-v2:4c6c21053e3fa16e53c9efbfb33cc01b024b5465",
             "essential": true,
@@ -23,7 +22,6 @@
             }]
           },
           {
-            "cpu": 0,
             "environment": [
               {
                 "Name": "SPAMMER_TYPE",
