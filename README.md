@@ -1,6 +1,6 @@
 # SpammerV2
 
-[![<LeonPatmore>](https://circleci.com/gh/LeonPatmore/spammer-v2.svg?style=shield)](<LINK>)
+[![LeonPatmore](https://circleci.com/gh/LeonPatmore/spammer-v2.svg?style=shield)](<LINK>)
 
 ## Running
 
@@ -71,6 +71,10 @@ thresholds: {
     break: 50,
 }
 ```
+
+### Functional
+
+[README](functional/README.md)
 
 ## Static Analysis
 
@@ -285,3 +289,9 @@ Metrics:
         "response_code_percentile_99": 6
     }
 ```
+
+## Deployment
+
+### AWS
+
+[README](aws/README.md)

@@ -2,3 +2,5 @@ node_modules
 coverage
 reports
 .stryker-tmp
+.idea
+.pytest_cache
