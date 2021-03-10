@@ -117,6 +117,11 @@ class SpammerFollower {
         await this.connectedLeaders.addLeader(socketAddress, actualVersion);
     }
 
+    removeLeader(uuid) {
+        logger.info(`Removing leader with uuid [ ${uuid} ]`);
+        this.connectedLeaders.removeLeader(uuid);
+    }
+
     /**
      * Reset the follower's performance run.
      */

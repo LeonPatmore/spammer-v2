@@ -33,6 +33,20 @@ class SpammerFollowerHttp extends SpammerFollower {
                 res.end();
             }
         );
+        // TODO: Add a test for me.
+        this.httpServer.addDeleteHandler(
+            `/${SpammerFollowerHttp.version}/${SpammerFollowerHttp.leaderPath}/:uuid`,
+            (req, res, next) => {
+                try {
+                    const uuid = req.params.uuid;
+                    this.removeLeader(uuid);
+                } catch (e) {
+                    logger.info(e.message);
+                    next(e);
+                }
+                res.end();
+            }
+        );
         this.httpServer.addErrorHandler(spammerErrorHandler);
     }
 
@@ -46,5 +60,6 @@ class SpammerFollowerHttp extends SpammerFollower {
 }
 
 SpammerFollowerHttp.connectPath = 'connect';
+SpammerFollowerHttp.leaderPath = 'leader';
 
 module.exports = SpammerFollowerHttp;

@@ -28,10 +28,6 @@
                 "Value": "follower"
               },
               {
-                "Name": "SPAMMER_INITIAL_LEADER_SOCKET_ADDRESS",
-                "Value": "localhost:5435"
-              },
-              {
                 "Name": "SPAMMER_PORT",
                 "Value": "1234"
               }

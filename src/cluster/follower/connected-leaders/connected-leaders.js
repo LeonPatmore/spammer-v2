@@ -3,9 +3,12 @@ const { HttpAwareError } = require('../../spammer-http-error-handler');
 const httpStatus = require('http-status-codes');
 const logger = require('../../../logger/logger');
 
-class UnknownLeaderError extends Error {
+class UnknownLeaderError extends HttpAwareError {
     constructor(leaderUuid) {
         super(`unknown leader with uuid [ ${leaderUuid} ]`);
+    }
+    getHttpCode() {
+        return httpStatus.BAD_REQUEST;
     }
 }
 
@@ -58,6 +61,11 @@ class ConnectedLeaders {
             version: version,
             uuid: uuid,
         });
+    }
+
+    removeLeader(uuid) {
+        if (!this.hasUuid(uuid)) throw new UnknownLeaderError(uuid);
+        this.leaders.delete(uuid);
     }
 
     /**

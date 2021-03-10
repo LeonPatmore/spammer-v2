@@ -64,6 +64,15 @@ class HttpServer {
     }
 
     /**
+     * Add a delete handler to the server.
+     * @param {string}   path
+     * @param {Function} handlerFunction
+     */
+    addDeleteHandler(path, handlerFunction) {
+        this.express.delete(path, handlerFunction);
+    }
+
+    /**
      * Close the HTTP server.
      */
     closeServer() {

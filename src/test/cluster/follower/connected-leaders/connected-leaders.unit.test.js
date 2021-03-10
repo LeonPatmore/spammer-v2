@@ -60,3 +60,15 @@ it('Ensure adding leader which is already connected thrpws already connected exp
         expect(e.message).toEqual('leader with id [ leader_uuid ] is already connected!');
     }
 });
+
+it('Test remove leader WHEN leader does exist THEN removes from leaders map', async () => {
+    await connectedLeaders.addLeader(LEADER_SOCKET_ADDRESS, LEADER_VERSION);
+
+    connectedLeaders.removeLeader(LEADER_UUID);
+
+    expect(connectedLeaders.leaders).not.toHaveProperty(LEADER_UUID);
+});
+
+it('Test remove leader WHEN leader does not exist THEN throw exception', () => {
+    expect(() => connectedLeaders.removeLeader(LEADER_UUID)).toThrowError(UnknownLeaderError);
+});
