@@ -30,7 +30,7 @@ describe('Add performance test', () => {
         const configStringWithCustomMetric = `function runRequest() {
             console.log("hi")
         }
-        
+
         module.exports = {
             runtimeSeconds: 5,
             runRequest: runRequest,
@@ -79,6 +79,27 @@ describe('Add performance test', () => {
         await waitForPerformanceTestStatus(performanceTest, performanceTestStatus.WAITING_FOR_ENOUGH_FOLLOWERS);
     });
 });
+
+describe('Follower manager tests', () => {
+    it('Test that follower gets removed when there are no updates', async () => {
+        spammerLeader.connectedFollowers.set('some-id', {
+            uuid: 'some-id',
+            available: true,
+            status: 'status',
+            lastUpdate: new Date(),
+            jobs: [],
+        });
+        await waitForMissingConnectedFollower('some-id');
+    }, 10000);
+});
+
+const waitForMissingConnectedFollower = async (followerUuid, delay = 100, attempts = 60) => {
+    for (let i = 0; i < attempts; i++) {
+        if (!spammerLeader.connectedFollowers.has(followerUuid)) return;
+        await sleep(delay);
+    }
+    throw new Error('Performance test did not go to the expected status!');
+};
 
 const waitForPerformanceTestStatus = async (performanceTest, expectedStatus, delay = 100, attempts = 60) => {
     for (let i = 0; i < attempts; i++) {
