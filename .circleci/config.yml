@@ -48,6 +48,11 @@ jobs:
             - image: circleci/python:3.7
             steps:
             - checkout
+            - attach_workspace:
+                at: workspace/env
+            - run: cat workspace/env >> $BASH_ENV
+            - run: export LEADER_HOST=$PUBLIC_IP
+            - run: export FOLLOWER_HOST=$PUBLIC_IP
             - run:
                   name: install-pipenv
                   command: |
@@ -56,14 +61,6 @@ jobs:
             - run:
                   name: run-functional-tests
                   command: pipenv run python -m pytest
-      delete_dev:
-            working_directory: ~/project/aws
-            docker:
-            - image: circleci/python:2.7
-            steps:
-            - checkout
-            - aws-cloudformation/delete-stack:
-                  stack-name: SpammerV2CI
 workflows:
       version: 2
       build_test_push:
@@ -75,14 +72,17 @@ workflows:
             - aws-cloudformation/create-stack:
                   stack-name: SpammerV2CI
                   template-file-path: aws/ecs.json
-                  extra-arguments: --parameters ParameterKey=Version,ParameterValue=${CIRCLE_SHA1} ParameterKey=Subnets,ParameterValue=subnet-c8d3efe6
+                  extra-arguments: --parameters ParameterKey=Version,ParameterValue=${CIRCLE_SHA1} ParameterKey=Subnets,ParameterValue=subnet-3f024e59
                   requires: 
                   - build_test
                   - docker/publish
             - persist_ip:
                   requires:
                   - aws-cloudformation/create-stack
+            - functional:
+                  requires:
+                  - persist_ip
             - aws-cloudformation/delete-stack:
                   stack-name: SpammerV2CI
                   requires:
-                  - persist_ip
+                  - functional
