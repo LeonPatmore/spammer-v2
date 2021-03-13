@@ -1,12 +1,13 @@
 version: 2.1
 orbs:
-    docker: circleci/docker@0.5.20
+      docker: circleci/docker@0.5.20
+      aws-cloudformation: orbss/aws-cloudformation@0.1.6
 jobs:
-    build_test:
-        working_directory: ~
-        docker:
+      build_test:
+            working_directory: '~'
+            docker:
             - image: circleci/node:10.16.3
-        steps:
+            steps:
             - checkout
             - run:
                   name: update-npm
@@ -29,11 +30,23 @@ jobs:
             - run:
                   name: unit-tests
                   command: npm test
+      create_dev:
+            docker:
+            - image: circleci/python:2.7
+            steps:
+            - checkout
+            - create-stack:
+                  stack-name: 'SpammerV2CI'
+                  template-file-path: './aws/ecs.json'
 workflows:
-    version: 2
-    build_test_push:
-        jobs:
+      version: 2
+      build_test_push:
+            jobs:
             - build_test
             - docker/publish:
                   image: leonpatmore/spammer-v2
                   tag: ${CIRCLE_SHA1}
+            - functional:
+                  requires: 
+                        - build_test
+                        - docker/publish
