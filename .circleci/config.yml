@@ -83,7 +83,6 @@ workflows:
                   requires:
                   - persist_ip
             - aws-cloudformation/delete-stack:
-                  when: always
                   stack-name: SpammerV2CI
                   requires:
                   - functional
