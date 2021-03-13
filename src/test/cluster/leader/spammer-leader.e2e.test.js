@@ -93,7 +93,7 @@ describe('Follower manager tests', () => {
     }, 10000);
 });
 
-const waitForMissingConnectedFollower = async (followerUuid, delay = 100, attempts = 60) => {
+const waitForMissingConnectedFollower = async (followerUuid, delay = 500, attempts = 14) => {
     for (let i = 0; i < attempts; i++) {
         if (!spammerLeader.connectedFollowers.has(followerUuid)) return;
         await sleep(delay);

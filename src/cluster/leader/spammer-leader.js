@@ -31,6 +31,7 @@ class SpammerLeader {
         this.connectedFollowers = new Map();
         this.performanceTests = [];
         this.managePerformanceTestsInterval = setInterval(() => this._managePerformanceTests(), 1000);
+        this.managerFollowersInterval = setInterval(() => this._manageFollowers(), 1000);
     }
 
     /**
@@ -76,6 +77,19 @@ class SpammerLeader {
             currentPerformanceTest.followers = availableFollowers;
             currentPerformanceTest.status = performanceTestStatus.WAITING_FOR_FOLLOWERS;
         }
+    }
+
+    _manageFollowers() {
+        this.connectedFollowers.forEach((value, key) => {
+            const lastUpdated = value['lastUpdate'];
+            const lastUpdatedDiff = new Date().getTime() - lastUpdated.getTime();
+            if (lastUpdatedDiff > SpammerLeader.kickFollowerAfterMs) {
+                logger.info(
+                    `Removing follower [ ${key} ] since it has not received an update for [ ${lastUpdatedDiff}ms ]`
+                );
+                this.connectedFollowers.delete(key);
+            }
+        });
     }
 
     /**
@@ -193,9 +207,11 @@ class SpammerLeader {
      */
     close() {
         clearInterval(this.managePerformanceTestsInterval);
+        clearInterval(this.managerFollowersInterval);
     }
 }
 
 SpammerLeader.version = 'v1';
+SpammerLeader.kickFollowerAfterMs = 3000;
 
 module.exports = { SpammerLeader };
