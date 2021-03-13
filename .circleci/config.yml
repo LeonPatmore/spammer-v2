@@ -31,7 +31,6 @@ jobs:
                   name: unit-tests
                   command: npm test
       persist_ip:
-            working_directory: ~/project/aws
             executor: aws-cli/default
             steps:
             - checkout
@@ -76,6 +75,7 @@ workflows:
             - aws-cloudformation/create-stack:
                   stack-name: SpammerV2CI
                   template-file-path: aws/ecs.json
+                  extra-arguments: --parameters ParameterKey=Version,ParameterValue=${CIRCLE_SHA1} ParameterKey=Subnets,ParameterValue=subnet-c8d3efe6
                   requires: 
                   - build_test
                   - docker/publish
