@@ -36,7 +36,7 @@ jobs:
             - image: circleci/python:2.7
             steps:
             - checkout
-            - create-stack:
+            - aws-cloudformation/create-stack:
                   stack-name: SpammerV2CI
                   template-file-path: ecs.json
             - run:
@@ -66,7 +66,7 @@ jobs:
             - image: circleci/python:2.7
             steps:
             - checkout
-            - delete-stack:
+            - aws-cloudformation/delete-stack:
                   stack-name: SpammerV2CI
 workflows:
       version: 2
