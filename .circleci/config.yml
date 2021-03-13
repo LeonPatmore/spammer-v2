@@ -2,6 +2,7 @@ version: 2.1
 orbs:
       docker: circleci/docker@0.5.20
       aws-cloudformation: orbss/aws-cloudformation@0.1.6
+      aws-cli: circleci/aws-cli@1.4.0
 jobs:
       build_test:
             docker:
@@ -31,10 +32,10 @@ jobs:
                   command: npm test
       persist_ip:
             working_directory: ~/project/aws
-            docker:
-            - image: circleci/python:2.7
+            executor: aws-cli/default
             steps:
-            - run: aws-cli/install
+            - checkout
+            - aws-cli/setup
             - run:
                   name: get-ip-and-persist
                   command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py) >> workspace/env"
@@ -74,7 +75,7 @@ workflows:
                   tag: ${CIRCLE_SHA1}
             - aws-cloudformation/create-stack:
                   stack-name: SpammerV2CI
-                  template-file-path: ecs.json
+                  template-file-path: aws/ecs.json
                   requires: 
                   - build_test
                   - docker/publish
