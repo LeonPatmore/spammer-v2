@@ -29,15 +29,12 @@ jobs:
             - run:
                   name: unit-tests
                   command: npm test
-      create_dev:
+      persist_ip:
             working_directory: ~/project/aws
             docker:
             - image: circleci/python:2.7
             steps:
-            - checkout
-            - aws-cloudformation/create-stack:
-                  stack-name: SpammerV2CI
-                  template-file-path: ecs.json
+            - run: aws-cli/install
             - run:
                   name: get-ip-and-persist
                   command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py) >> workspace/env"
@@ -75,7 +72,16 @@ workflows:
             - docker/publish:
                   image: leonpatmore/spammer-v2
                   tag: ${CIRCLE_SHA1}
-            - create_dev:
+            - aws-cloudformation/create-stack:
+                  stack-name: SpammerV2CI
+                  template-file-path: ecs.json
                   requires: 
-                        - build_test
-                        - docker/publish
+                  - build_test
+                  - docker/publish
+            - persist_ip:
+                  requires:
+                  - aws-cloudformation/create-stack
+            - aws-cloudformation/delete-stack:
+                  stack-name: SpammerV2CI
+                  requires:
+                  - create_dev
