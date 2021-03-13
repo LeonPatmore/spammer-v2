@@ -84,4 +84,4 @@ workflows:
             - aws-cloudformation/delete-stack:
                   stack-name: SpammerV2CI
                   requires:
-                  - create_dev
+                  - persist_ip
