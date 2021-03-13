@@ -1,4 +1,14 @@
 {
+  "Parameters": {
+    "Version": {
+      "Type": "String",
+      "Description": "Version of the follower and leader to deploy"
+    },
+    "Subnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "A list of subnets to place the ECS service."
+    }
+  },
   "Resources": {
     "Cluster": {
       "Type": "AWS::ECS::Cluster",
@@ -14,7 +24,7 @@
         "containerDefinitions": [
           {
             "environment": [],
-            "image": "leonpatmore/spammer-v2:4c6c21053e3fa16e53c9efbfb33cc01b024b5465",
+            "image": {"Fn::Sub": ["leonpatmore/spammer-v2:${Version}", {"Version": {"Ref": "Version"}}]},
             "essential": true,
             "name": "leader",
             "PortMappings": [{
@@ -32,7 +42,7 @@
                 "Value": "1234"
               }
             ],
-            "image": "leonpatmore/spammer-v2:4c6c21053e3fa16e53c9efbfb33cc01b024b5465",
+            "image": {"Fn::Sub": ["leonpatmore/spammer-v2:${Version}", {"Version": {"Ref": "Version"}}]},
             "essential": true,
             "name": "follower",
             "PortMappings": [{
@@ -73,7 +83,7 @@
             "SecurityGroups": [
               {"Fn::GetAtt": ["SG", "GroupId"]}
             ],
-            "Subnets": ["subnet-c8d3efe6", "subnet-ad19d8e0", "subnet-c8d4e694"]
+            "Subnets": { "Ref": "Subnets" }
           }
         }
       }

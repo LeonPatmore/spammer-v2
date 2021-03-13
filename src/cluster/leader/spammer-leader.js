@@ -26,7 +26,7 @@ class SpammerLeader {
      */
     constructor() {
         this.uuid = uuidv4();
-        logger.info(`Starting cluster host with id [ ${this.uuid} ]`);
+        logger.info(`Starting cluster leader with id [ ${this.uuid} ]`);
         this.followerJobRepository = new FollowerJobRepository();
         this.connectedFollowers = new Map();
         this.performanceTests = [];

@@ -33,7 +33,6 @@ class SpammerFollowerHttp extends SpammerFollower {
                 res.end();
             }
         );
-        // TODO: Add a test for me.
         this.httpServer.addDeleteHandler(
             `/${SpammerFollowerHttp.version}/${SpammerFollowerHttp.leaderPath}/:uuid`,
             (req, res, next) => {

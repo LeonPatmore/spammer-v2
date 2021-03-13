@@ -213,4 +213,13 @@ describe('API Tests', () => {
             expect(job.result).toEqual('the-result');
         });
     });
+
+    describe('Info path', () => {
+        it('Test info path returns the id of the leader', async () => {
+            const response = await sendRequest(spammerPort, 'GET', 'v1/info');
+
+            expect(response.status).toEqual(200);
+            expect(response.data.uuid).toEqual(spammerLeaderInstance.uuid);
+        });
+    });
 });

@@ -125,20 +125,21 @@ class SpammerLeaderHttp extends SpammerLeader {
         this.httpServer.addPutHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.jobStatusPath}`,
             (req, res) => {
-                try {
-                    this.handleJobUpdate(
-                        req.body.follower_uuid,
-                        req.body.job_uuid,
-                        req.body.job_status,
-                        req.body.job_result
-                    );
-                    res.end();
-                } catch (e) {
-                    console.log(e);
-                    throw e;
-                }
+                this.handleJobUpdate(
+                    req.body.follower_uuid,
+                    req.body.job_uuid,
+                    req.body.job_status,
+                    req.body.job_result
+                );
+                res.end();
             }
         );
+
+        this.httpServer.addGetHandler(`/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.infoPath}`, (_, res) => {
+            res.json({
+                uuid: this.uuid,
+            }).end();
+        });
 
         this.httpServer.addErrorHandler(spammerErrorHandler);
     }
@@ -152,6 +153,7 @@ class SpammerLeaderHttp extends SpammerLeader {
     }
 }
 
+SpammerLeaderHttp.infoPath = 'info';
 SpammerLeaderHttp.followerPath = 'follower';
 SpammerLeaderHttp.jobPath = 'job';
 SpammerLeaderHttp.jobStatusPath = `${SpammerLeaderHttp.jobPath}/status`;

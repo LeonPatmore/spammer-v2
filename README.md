@@ -88,6 +88,22 @@ All paths are prefixed by `/vx`, where `x` is the version number.
 
 ### Leader API
 
+#### Info
+
+Get some information about this leader.
+
+`GET /vx/info`
+
+Response:
+
+`200 OK`
+
+```json
+{
+    "uuid": "be44c20b-e5e6-40d3-ba07-d1966e158f84"
+}
+```
+
 #### Get Clients
 
 Get a list of clients connected to this leader.
@@ -210,6 +226,16 @@ Request Body:
     "socket_address": "localhost:5435"
 }
 ```
+
+Response:
+
+`200 OK`
+
+#### Disconnect from a Leader
+
+Disconnect from a Spammer leader.
+
+`DELETE /vx/leader/${leader_uuid}`
 
 Response:
 
