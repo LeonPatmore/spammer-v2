@@ -37,7 +37,7 @@ jobs:
             - aws-cli/setup
             - run:
                   name: get-ip-and-persist
-                  command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py) >> workspace/env"
+                  command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py)" >> workspace/env
             - persist_to_workspace:
                   root: workspace
                   paths:
@@ -83,6 +83,7 @@ workflows:
                   requires:
                   - persist_ip
             - aws-cloudformation/delete-stack:
+                  when: always
                   stack-name: SpammerV2CI
                   requires:
                   - functional
