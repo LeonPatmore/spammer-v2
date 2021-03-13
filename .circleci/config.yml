@@ -31,13 +31,43 @@ jobs:
                   name: unit-tests
                   command: npm test
       create_dev:
+            working_directory: ~/project/aws
             docker:
             - image: circleci/python:2.7
             steps:
             - checkout
             - create-stack:
-                  stack-name: 'SpammerV2CI'
-                  template-file-path: './aws/ecs.json'
+                  stack-name: SpammerV2CI
+                  template-file-path: ecs.json
+            - run:
+                  name: get-ip-and-persist
+                  command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py) >> workspace/env"
+            - persist_to_workspace:
+                  root: workspace
+                  paths:
+                  - env
+      functional:
+            working_directory: ~/project/functional
+            docker:
+            - image: circleci/python:3.7
+            steps:
+            - checkout
+            - run:
+                  name: install-pipenv
+                  command: |
+                        sudo pip install pipenv
+                        pipenv install
+            - run:
+                  name: run-functional-tests
+                  command: pipenv run python -m pytest
+      delete_dev:
+            working_directory: ~/project/aws
+            docker:
+            - image: circleci/python:2.7
+            steps:
+            - checkout
+            - delete-stack:
+                  stack-name: SpammerV2CI
 workflows:
       version: 2
       build_test_push:
@@ -46,7 +76,7 @@ workflows:
             - docker/publish:
                   image: leonpatmore/spammer-v2
                   tag: ${CIRCLE_SHA1}
-            - functional:
+            - create_dev:
                   requires: 
                         - build_test
                         - docker/publish
