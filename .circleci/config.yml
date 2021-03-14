@@ -35,11 +35,12 @@ jobs:
             steps:
             - checkout
             - aws-cli/setup
+            - run: mkdir /tmp/workspace
             - run:
                   name: get-ip-and-persist
-                  command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py)" >> workspace/env
+                  command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py)" >> /tmp/workspace/env
             - persist_to_workspace:
-                  root: workspace
+                  root: /tmp/workspace
                   paths:
                   - env
       functional:
@@ -49,8 +50,8 @@ jobs:
             steps:
             - checkout
             - attach_workspace:
-                at: workspace/env
-            - run: cat workspace/env >> $BASH_ENV
+                at: /tmp/workspace
+            - run: cat /tmp/workspace/env >> $BASH_ENV
             - run: export LEADER_HOST=$PUBLIC_IP
             - run: export FOLLOWER_HOST=$PUBLIC_IP
             - run:
