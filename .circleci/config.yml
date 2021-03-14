@@ -1,12 +1,13 @@
 version: 2.1
 orbs:
-    docker: circleci/docker@0.5.20
+      docker: circleci/docker@0.5.20
+      aws-cloudformation: orbss/aws-cloudformation@0.1.6
+      aws-cli: circleci/aws-cli@1.4.0
 jobs:
-    build_test:
-        working_directory: ~
-        docker:
+      build_test:
+            docker:
             - image: circleci/node:10.16.3
-        steps:
+            steps:
             - checkout
             - run:
                   name: update-npm
@@ -29,11 +30,64 @@ jobs:
             - run:
                   name: unit-tests
                   command: npm test
+      persist_ip:
+            executor: aws-cli/default
+            steps:
+            - checkout
+            - aws-cli/setup
+            - run: mkdir /tmp/workspace
+            - run:
+                  name: get-ip-and-persist
+                  command: echo "export PUBLIC_IP=$(python ./aws/get_ip_of_task.py)" >> /tmp/workspace/env
+            - persist_to_workspace:
+                  root: /tmp/workspace
+                  paths:
+                  - env
+      functional:
+            docker:
+            - image: circleci/python:3.7
+            steps:
+            - checkout
+            - attach_workspace:
+                at: /tmp/workspace
+            - run: cat /tmp/workspace/env
+            - run: cat /tmp/workspace/env >> $BASH_ENV
+            - run: echo $PUBLIC_IP
+            - run: echo "export LEADER_HOST=$PUBLIC_IP" >> $BASH_ENV
+            - run: echo "export FOLLOWER_HOST=$PUBLIC_IP" >> $BASH_ENV
+            - run: echo $FOLLOWER_HOST
+            - run: echo $LEADER_HOST
+            - run:
+                  name: install-pipenv
+                  command: |
+                        cd functional
+                        sudo pip install pipenv
+                        pipenv install
+            - run:
+                  name: run-functional-tests
+                  command: cd functional && pipenv run python -m pytest
 workflows:
-    version: 2
-    build_test_push:
-        jobs:
+      version: 2
+      build_test_push:
+            jobs:
             - build_test
             - docker/publish:
                   image: leonpatmore/spammer-v2
                   tag: ${CIRCLE_SHA1}
+            - aws-cloudformation/create-stack:
+                  stack-name: SpammerV2CI
+                  template-file-path: aws/ecs.json
+                  extra-arguments: --parameters ParameterKey=Version,ParameterValue=${CIRCLE_SHA1} ParameterKey=Subnets,ParameterValue=subnet-3f024e59
+                  requires: 
+                  - build_test
+                  - docker/publish
+            - persist_ip:
+                  requires:
+                  - aws-cloudformation/create-stack
+            - functional:
+                  requires:
+                  - persist_ip
+            - aws-cloudformation/delete-stack:
+                  stack-name: SpammerV2CI
+                  requires:
+                  - functional
