@@ -53,8 +53,8 @@ jobs:
             - run: cat /tmp/workspace/env
             - run: cat /tmp/workspace/env >> $BASH_ENV
             - run: echo $PUBLIC_IP
-            - run: export LEADER_HOST=$PUBLIC_IP
-            - run: export FOLLOWER_HOST=$PUBLIC_IP
+            - run: echo "export LEADER_HOST=$PUBLIC_IP" >> $BASH_ENV
+            - run: echo "export FOLLOWER_HOST=$PUBLIC_IP" >> $BASH_ENV
             - run: echo $FOLLOWER_HOST
             - run: echo $LEADER_HOST
             - run:
