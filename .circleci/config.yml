@@ -44,7 +44,6 @@ jobs:
                   paths:
                   - env
       functional:
-            working_directory: ~/project/functional
             docker:
             - image: circleci/python:3.7
             steps:
@@ -57,11 +56,12 @@ jobs:
             - run:
                   name: install-pipenv
                   command: |
+                        cd functional
                         sudo pip install pipenv
                         pipenv install
             - run:
                   name: run-functional-tests
-                  command: pipenv run python -m pytest
+                  command: cd functional && pipenv run python -m pytest
 workflows:
       version: 2
       build_test_push:
