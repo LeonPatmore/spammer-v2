@@ -48,6 +48,14 @@
             "PortMappings": [{
               "ContainerPort": 1234
             }]
+          },
+          {
+            "image": "mhausenblas/simpleservice:0.5.0",
+            "essential": true,
+            "name": "mock-server",
+            "PortMappings": [{
+              "ContainerPort": 9876
+            }]
           }
         ],
         "memory": "512",
