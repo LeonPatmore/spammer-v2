@@ -4,6 +4,11 @@
       "Type": "String",
       "Description": "Version of the follower and leader to deploy"
     },
+    "UIVersion": {
+      "Type": "String",
+      "Default": "32fcb4f7c71f5140161d7e73d76c60cee2298f58",
+      "Description": "Version of the ui to deploy"
+    },
     "Subnets": {
       "Type": "List<AWS::EC2::Subnet::Id>",
       "Description": "A list of subnets to place the ECS service."
@@ -55,6 +60,24 @@
             "name": "mock-server",
             "PortMappings": [{
               "ContainerPort": 9876
+            }]
+          },
+          {
+            "image": {"Fn::Sub": ["leonpatmore/spammer-v2-ui:${Version}", {"Version": {"Ref": "UIVersion"}}]},
+            "environment": [
+              {
+                "Name": "SPAMMER_LEADER_HOST",
+                "Value": "localhost"
+              },
+              {
+                "Name": "SPAMMER_LEADER_PORT",
+                "Value": "5435"
+              }
+            ],
+            "essential": true,
+            "name": "ui",
+            "PortMappings": [{
+              "ContainerPort": 3000
             }]
           }
         ],
