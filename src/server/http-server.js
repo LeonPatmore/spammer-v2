@@ -75,8 +75,13 @@ class HttpServer {
     /**
      * Close the HTTP server.
      */
-    closeServer() {
-        this.httpServer.close();
+    async closeServer() {
+        await new Promise((resolve, reject) => {
+            this.httpServer.close(err => {
+                if (err) return reject(data);
+                resolve();
+            });
+        });
     }
 }
 

@@ -24,8 +24,8 @@ beforeEach(() => {
     spammerFollowerInstance = new SpammerFollowerHttp('127.0.0.1', spammerPort);
 });
 
-afterEach(() => {
-    spammerFollowerInstance.close();
+afterEach(async () => {
+    await spammerFollowerInstance.close();
 });
 
 describe('API Tests', () => {

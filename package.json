@@ -5,7 +5,7 @@
     "main": "test.js",
     "scripts": {
         "start": "node src/spammer.js",
-        "test": "jest --env=node",
+        "test": "jest --env=node --runInBand",
         "lint": "eslint .",
         "mutation": "npx stryker run",
         "postinstall": "patch-package"
@@ -45,7 +45,9 @@
         "http-status-codes": "^1.4.0",
         "pino": "^5.17.0",
         "require-from-string": "^2.0.2",
-        "uuid": "^7.0.2"
+        "socket.io": "^4.0.0",
+        "uuid": "^7.0.2",
+        "websocket": "^1.0.33"
     },
     "jest": {
         "clearMocks": true,

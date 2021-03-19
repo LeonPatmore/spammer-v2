@@ -10,6 +10,9 @@ const { FollowerJobRepository } = require('./follower-job-repository');
 const statusCodes = require('http-status-codes');
 const metricsConfigurations = require('./interfaces/metrics/metrics-configurations');
 const requireFromString = require('require-from-string');
+const SpammerLeaderWebSocket = require('./websocket/spammer-leader-websocket');
+const emitter = require('../../events/event-bus');
+const leaderEvents = require('./leader-events');
 
 class UnknownPerformanceTest extends HttpAwareError {
     constructor(performanceUuid) {
@@ -32,6 +35,7 @@ class SpammerLeader {
         this.performanceTests = [];
         this.managePerformanceTestsInterval = setInterval(() => this._managePerformanceTests(), 1000);
         this.managerFollowersInterval = setInterval(() => this._manageFollowers(), 1000);
+        this.websocket = new SpammerLeaderWebSocket();
     }
 
     /**
@@ -88,8 +92,13 @@ class SpammerLeader {
                     `Removing follower [ ${key} ] since it has not received an update for [ ${lastUpdatedDiff}ms ]`
                 );
                 this.connectedFollowers.delete(key);
+                this._followersUpdated();
             }
         });
+    }
+
+    _followersUpdated() {
+        emitter.emit(leaderEvents.UPDATE_FOLLOWERS, this.connectedFollowers.values());
     }
 
     /**
@@ -183,6 +192,7 @@ class SpammerLeader {
             lastUpdate: new Date(),
             jobs: activeJobs,
         });
+        this._followersUpdated();
         return activeJobs;
     }
 
@@ -205,9 +215,10 @@ class SpammerLeader {
     /**
      * Close the spammer leader.
      */
-    close() {
+    async close() {
         clearInterval(this.managePerformanceTestsInterval);
         clearInterval(this.managerFollowersInterval);
+        await this.websocket.close();
     }
 }
 

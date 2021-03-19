@@ -19,8 +19,8 @@ beforeEach(() => {
     spammerLeader = new SpammerLeader();
 });
 
-afterEach(() => {
-    spammerLeader.close();
+afterEach(async () => {
+    await spammerLeader.close();
 });
 
 describe('Add performance test', () => {

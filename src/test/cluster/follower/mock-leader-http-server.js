@@ -20,7 +20,7 @@ async function start() {
         return new Promise((resolve, reject) => {
             leaderServer = new ServerMock({ host: '0.0.0.0', port: mockPort });
             leaderServer.start((err, data) => {
-                if (err) return reject(data);
+                if (err) return reject(err);
                 resolve(data);
             });
         });
@@ -59,7 +59,7 @@ async function start() {
 async function stop() {
     await new Promise((resolve, reject) => {
         leaderServer.stop((err, data) => {
-            if (err) return reject(data);
+            if (err) return reject(err);
             resolve(data);
         });
     });

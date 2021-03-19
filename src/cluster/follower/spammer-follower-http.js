@@ -52,9 +52,9 @@ class SpammerFollowerHttp extends SpammerFollower {
     /**
      * Close the spammer follower.
      */
-    close() {
+    async close() {
         super.close();
-        this.httpServer.closeServer();
+        await this.httpServer.closeServer();
     }
 }
 

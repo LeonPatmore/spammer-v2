@@ -48,9 +48,11 @@ class Spammer {
     /**
      * Close the Spammer, closing any dependencies it may have.
      */
-    close() {
+    async close() {
         if (this.hasOwnProperty('spammerFollowerHttp')) {
-            this.spammerFollowerHttp.close();
+            await this.spammerFollowerHttp.close();
+        } else if (this.hasOwnProperty('spammerLeaderHttp')) {
+            await this.spammerLeaderHttp.close();
         }
     }
 }

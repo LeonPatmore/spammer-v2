@@ -24,8 +24,9 @@ describe('API Tests', () => {
         spammerLeaderInstance = new SpammerLeaderHttp('0.0.0.0', spammerPort);
     });
 
-    afterEach(() => {
-        spammerLeaderInstance.close();
+    afterEach(async () => {
+        await spammerLeaderInstance.close();
+        console.log('Done closing spammer leader instance!');
     });
 
     describe('Clients path', () => {

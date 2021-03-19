@@ -147,9 +147,9 @@ class SpammerLeaderHttp extends SpammerLeader {
     /**
      * Close all resources.
      */
-    close() {
-        super.close();
-        this.httpServer.closeServer();
+    async close() {
+        await super.close();
+        await this.httpServer.closeServer();
     }
 }
 
