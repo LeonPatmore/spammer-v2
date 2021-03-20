@@ -98,7 +98,7 @@ class SpammerLeader {
     }
 
     _followersUpdated() {
-        emitter.emit(leaderEvents.UPDATE_FOLLOWERS, this.connectedFollowers.values());
+        emitter.emit(leaderEvents.UPDATE_FOLLOWERS, Array.from(this.connectedFollowers.values()));
     }
 
     /**

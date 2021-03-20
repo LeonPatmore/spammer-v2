@@ -78,7 +78,7 @@ class HttpServer {
     async closeServer() {
         await new Promise((resolve, reject) => {
             this.httpServer.close(err => {
-                if (err) return reject(data);
+                if (err) return reject(err);
                 resolve();
             });
         });

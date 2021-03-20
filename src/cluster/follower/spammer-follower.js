@@ -30,15 +30,12 @@ class SpammerFollower {
         );
 
         this._resetPerformanceRun();
-        logger.info(`Starting follower with ID [ ${this.uuid} ]`);
+        logger.info(`Starting follower with ID [ ${this.uuidHolder.uuid} ]`);
 
         this.jobHandlers = {};
         this.jobHandlers[jobTypes.PERFORMANCE_PLAN] = (_0, jobConfig, _1) => this._handlePerformancePlan(jobConfig);
         this.jobHandlers[jobTypes.PERFORMANCE_RUN] = (jobUuid, jobConfig, leaderUuid) =>
             this._handlePerformanceRun(jobUuid, jobConfig, leaderUuid);
-
-        logger.info('jobs handled: ' + jobsHandledPersistence);
-        logger.info('jobs handled: ' + this.jobsHandledPersistence);
 
         if (initialLeaderSocketAddress) {
             logger.info(
