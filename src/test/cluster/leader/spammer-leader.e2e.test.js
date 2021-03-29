@@ -3,6 +3,7 @@ const sleep = require('../../../utils/sleep');
 const jobTypes = require('../../../cluster/job-types');
 const { followerJobStatus } = require('../../../cluster/leader/follower-job');
 const { performanceTestStatus } = require('../../../cluster/leader/performance-test');
+const { PersistenceClient } = require('../../../persistence/persistence-client');
 
 let spammerLeader;
 
@@ -16,7 +17,14 @@ module.exports = {
 }`;
 
 beforeEach(() => {
-    spammerLeader = new SpammerLeader();
+    spammerLeader = new SpammerLeader(
+        new PersistenceClient({
+            host: global.__TESTCONTAINERS_POSTGRES_IP__,
+            port: global.__TESTCONTAINERS_POSTGRES_PORT_5432__,
+            user: 'spammer',
+            password: 'spammer',
+        })
+    );
 });
 
 afterEach(async () => {
@@ -36,7 +44,10 @@ describe('Add performance test', () => {
             runRequest: runRequest,
             metrics: {
                 custom_metric: {
-                    type: 'per_request_value'
+                    type: 'per_request_value',
+                    parts: {
+                        partOne: 'real'
+                    }
                 }
             }
         }`;

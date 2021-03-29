@@ -23,8 +23,8 @@ class SpammerLeaderHttp extends SpammerLeader {
      * @param {string} hostname The hostname of the server.
      * @param {Int16Array} port The port of the server.
      */
-    constructor(hostname, port) {
-        super();
+    constructor(hostname, port, persistenceClient) {
+        super(persistenceClient);
         this.httpServer = new HttpServer(hostname, port, ['/v1/follower/status']);
 
         this.httpServer.addGetHandler(
@@ -125,13 +125,17 @@ class SpammerLeaderHttp extends SpammerLeader {
         this.httpServer.addPutHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.jobStatusPath}`,
             (req, res) => {
-                this.handleJobUpdate(
-                    req.body.follower_uuid,
-                    req.body.job_uuid,
-                    req.body.job_status,
-                    req.body.job_result
-                );
-                res.end();
+                try {
+                    this.handleJobUpdate(
+                        req.body.follower_uuid,
+                        req.body.job_uuid,
+                        req.body.job_status,
+                        req.body.job_result
+                    );
+                    res.end();
+                } catch (e) {
+                    console.log(e);
+                }
             }
         );
 

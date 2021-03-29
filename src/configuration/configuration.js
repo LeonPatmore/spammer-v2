@@ -31,6 +31,30 @@ const config = convict({
         default: '',
         env: 'SPAMMER_INITIAL_LEADER_VERSION',
     },
+    databaseUser: {
+        doc: '[Optional] The database user name.',
+        format: String,
+        default: 'spammer',
+        env: 'SPAMMER_DATABASE_USER',
+    },
+    databasePassword: {
+        doc: '[Optional] The database password.',
+        format: String,
+        default: 'spammer',
+        env: 'SPAMMER_DATABASE_PASSWORD',
+    },
+    databaseHost: {
+        doc: '[Optional] The database host.',
+        format: String,
+        default: '192.168.99.100',
+        env: 'SPAMMER_DATABASE_HOST',
+    },
+    databasePort: {
+        doc: '[Optional] The database port.',
+        format: 'port',
+        default: '5432',
+        env: 'SPAMMER_DATABASE_PORT',
+    },
 });
 
 config.validate({ allowed: 'strict' });

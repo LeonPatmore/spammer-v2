@@ -4,6 +4,7 @@ const Configuration = require('../configuration/configuration');
 jest.mock('../cluster/follower/spammer-follower-http');
 jest.mock('../cluster/leader/spammer-leader-http');
 jest.mock('../configuration/configuration');
+jest.mock('../persistence/persistence-client');
 
 const configuration = {
     host: '0.0.0.0',
@@ -24,7 +25,7 @@ it('Ensure spammer loads leader with correct values', () => {
     jest.isolateModules(() => {
         spammer = require('../spammer');
     });
-    expect(SpammerLeaderHttp).toBeCalledWith('0.0.0.0', 1234);
+    expect(SpammerLeaderHttp).toBeCalledWith('0.0.0.0', 1234, expect.anything());
 });
 
 it('Ensure spammer loads follower with correct values', () => {

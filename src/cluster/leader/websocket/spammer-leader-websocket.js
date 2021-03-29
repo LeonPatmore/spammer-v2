@@ -5,14 +5,13 @@ const emitter = require('../../../events/event-bus');
 const logger = require('../../../logger/application-logger');
 
 class SpammerLeaderWebSocket {
-    constructor() {
+    constructor(onNewConnection) {
         this.server = http.createServer();
         this.server.listen(SpammerLeaderWebSocket.port, '0.0.0.0');
         this.wsServer = new WebSocketServer({
             httpServer: this.server,
         });
         emitter.on(leaderEvents.UPDATE_FOLLOWERS, followers => {
-            console.log('Updating followers!');
             this.wsServer.broadcastUTF(JSON.stringify({ followers }));
         });
         logger.info(`Started web socket on port [ ${SpammerLeaderWebSocket.port} ]`);
@@ -30,6 +29,7 @@ class SpammerLeaderWebSocket {
                 });
 
                 logger.info(`Accepted WS connection from origin [ ${request.origin} ]`);
+                onNewConnection(connection);
             } else {
                 request.reject();
                 logger.warn(`Rejected WS connection from origin [ ${request.origin} ]`);

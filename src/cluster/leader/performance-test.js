@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const { FollowerJob, followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 const logger = require('../../logger/application-logger');
-const metricsCombiner = require('../../metrics/metrics-combiner');
+const metricTypes = require('../../metrics/metric-types');
 
 const performanceTestStatus = {
     IN_QUEUE: 'in_queue',
@@ -17,9 +17,8 @@ class PerformancePlanJob extends FollowerJob {
      * A job for planning a performance run.
      * @param {object} config                   The performance test configuration.
      * @param {String} performanceUuid          The unique id of the performance test.
-     * @param {Function} statusChangeCallback   A function which is called when the status of the job changes.
      */
-    constructor(config, performanceUuid, metricsConfig, statusChangeCallback) {
+    constructor(config, performanceUuid, metricsConfig, statusChangeCallback, completedCallback) {
         super(
             {
                 performanceUuid: performanceUuid,
@@ -27,7 +26,8 @@ class PerformancePlanJob extends FollowerJob {
                 config: config,
             },
             jobTypes.PERFORMANCE_PLAN,
-            statusChangeCallback
+            statusChangeCallback,
+            completedCallback
         );
     }
 }
@@ -36,15 +36,15 @@ class PerformanceRunJob extends FollowerJob {
     /**
      * A job for running a planned performance run.
      * @param {String} performanceUuid          The unique id of the performance test.
-     * @param {Function} statusChangeCallback   A function which is called when the status of the job changes.
      */
-    constructor(performanceUuid, statusChangeCallback) {
+    constructor(performanceUuid, statusChangeCallback, completedCallback) {
         super(
             {
                 performanceUuid: performanceUuid,
             },
             jobTypes.PERFORMANCE_RUN,
-            statusChangeCallback
+            statusChangeCallback,
+            completedCallback
         );
     }
 }
@@ -55,28 +55,28 @@ class PerformanceTest {
      * - Calculating results.
      * - Creating follower jobs.
      * - Listening to follower job results.
-     * @param {object}      config                      The performance configuration.
+     * @param {object}      config  The performance configuration.
      */
-    constructor(config, metricsConfig) {
+    constructor(config, metricsConfig, metricsStoreGenerator) {
         this.uuid = uuidv4();
         this.config = config;
         this.metricsConfig = metricsConfig;
+        this.metricsStore = metricsStoreGenerator(this.uuid);
         this.status = performanceTestStatus.IN_QUEUE;
         this.planJobs = [];
         this.runJobs = [];
         this.followers = undefined;
         this.planJobsCompletedCallback = undefined;
         this.runJobsCompletedCallback = undefined;
-        this.result = undefined;
     }
 
     /**
      * Generates a plan job.
      */
     generateAndAttachPlanJob() {
-        const job = new PerformancePlanJob(this.config, this.uuid, this.metricsConfig, status =>
-            this._planJobStatusChange(status)
-        );
+        const job = new PerformancePlanJob(this.config, this.uuid, this.metricsConfig, undefined, () => {
+            this._handlePlanJobCompleted();
+        });
         this.planJobs.push(job);
         return job;
     }
@@ -85,22 +85,9 @@ class PerformanceTest {
      * Generates a run job.
      */
     generateAndAttachRunJob() {
-        const job = new PerformanceRunJob(this.uuid, status => this._runJobStatusChange(status));
+        const job = new PerformanceRunJob(this.uuid, undefined, async result => this._handleRunJobCompleted(result));
         this.runJobs.push(job);
         return job;
-    }
-
-    /**
-     * Handles a plan job status change.
-     * @param {String} status   The new status of the plan job.
-     */
-    _planJobStatusChange(status) {
-        logger.info(`Handling plan job status change for performance test [ ${this.uuid} ] of status [ ${status} ]`);
-        if (status == followerJobStatus.REJECTED) {
-            // TODO: Retry performance test.
-        } else if (status == followerJobStatus.COMPLETED) {
-            this._handlePlanJobCompleted();
-        }
     }
 
     /**
@@ -108,7 +95,7 @@ class PerformanceTest {
      */
     _handlePlanJobCompleted() {
         logger.info(`Handling plan job completion performance test [ ${this.uuid} ]`);
-        const allJobsCompleted = true;
+        let allJobsCompleted = true;
         this.planJobs.forEach(planJob => {
             if (planJob.status != followerJobStatus.COMPLETED) allJobsCompleted = false;
         });
@@ -119,34 +106,46 @@ class PerformanceTest {
     }
 
     /**
-     * Handles a run job status changes.
-     * @param {String} status   The new status of the run job.
+     * Handles a run job completion.
      */
-    _runJobStatusChange(status) {
-        logger.info(`Handling run job status change for performance test [ ${this.uuid} ] of status [ ${status} ]`);
-        if (status == followerJobStatus.REJECTED) {
-            // TODO: I don't know what to do here!
-        } else if (status == followerJobStatus.COMPLETED) {
-            this._handleRunJobCompleted();
+    async _handleRunJobCompleted(result) {
+        logger.info(`Handling run job completion performance test [ ${this.uuid} ]`);
+        logger.info(`The result is [ ${JSON.stringify(result)} ]`);
+        let allJobsCompleted = true;
+        this.runJobs.forEach(runJob => {
+            if (runJob.status != followerJobStatus.COMPLETED) allJobsCompleted = false;
+        });
+        await this._handleMetrics(result);
+        if (allJobsCompleted) {
+            logger.info(`All run jobs have been completed for performance test [ ${this.uuid} ]`);
+            // this.result = metricsCombiner(this.metricsConfig, results);
+            this.runJobsCompletedCallback();
         }
     }
 
-    /**
-     * Handles a run job completion.
-     */
-    _handleRunJobCompleted() {
-        logger.info(`Handling run job completion performance test [ ${this.uuid} ]`);
-        let allJobsCompleted = true;
-        const results = [];
-        this.runJobs.forEach(runJob => {
-            if (runJob.status != followerJobStatus.COMPLETED) allJobsCompleted = false;
-            results.push(runJob.result);
+    async _handleMetrics(result) {
+        Object.keys(result).forEach(metric => {
+            if (this.metricsConfig.hasOwnProperty(metric)) {
+                const thisType = this.metricsConfig[metric].type;
+                const value = result[metric];
+                switch (thisType) {
+                    case metricTypes.CONSTANT:
+                        this.metricsStore.insertConstant(metric, value);
+                    case metricTypes.ROLLING_TOTAL:
+                        this.metricsStore.addRollingTotal(metric, value);
+                    case metricTypes.PER_REQUEST_VALUE:
+                        this.metricsStore.addPerRequestValue(
+                            metric,
+                            value,
+                            Object.keys(this.metricsConfig[metric].parts)
+                        );
+                    default:
+                        logger.warn(`Not sure how to handle metric [ ${metric} ], type [ ${thisType} ]!`);
+                }
+            } else {
+                logger.warn(`Ignoring metric [ ${metric} ] since it is not in the metric configuration!`);
+            }
         });
-        if (allJobsCompleted) {
-            logger.info(`All run jobs have been completed for performance test [ ${this.uuid} ]`);
-            this.result = metricsCombiner(this.metricsConfig, results);
-            this.runJobsCompletedCallback();
-        }
     }
 }
 

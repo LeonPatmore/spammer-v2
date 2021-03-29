@@ -13,6 +13,7 @@ const requireFromString = require('require-from-string');
 const SpammerLeaderWebSocket = require('./websocket/spammer-leader-websocket');
 const emitter = require('../../events/event-bus');
 const leaderEvents = require('./leader-events');
+const MetricsStore = require('../../metrics/metric-store');
 
 class UnknownPerformanceTest extends HttpAwareError {
     constructor(performanceUuid) {
@@ -27,7 +28,8 @@ class SpammerLeader {
     /**
      * Manages all logic for distributing performance tests and handling update.
      */
-    constructor() {
+    constructor(persistenceClient) {
+        this.persistenceClient = persistenceClient;
         this.uuid = uuidv4();
         logger.info(`Starting cluster leader with id [ ${this.uuid} ]`);
         this.followerJobRepository = new FollowerJobRepository();
@@ -35,7 +37,9 @@ class SpammerLeader {
         this.performanceTests = [];
         this.managePerformanceTestsInterval = setInterval(() => this._managePerformanceTests(), 1000);
         this.managerFollowersInterval = setInterval(() => this._manageFollowers(), 1000);
-        this.websocket = new SpammerLeaderWebSocket();
+        this.websocket = new SpammerLeaderWebSocket(connection => {
+            connection.sendUTF(JSON.stringify({ leader: { uuid: this.uuid } }));
+        });
     }
 
     /**
@@ -141,7 +145,11 @@ class SpammerLeader {
             ...configModule.metrics,
             ...metricsConfigurations(configModule),
         };
-        const performanceTest = new PerformanceTest(config, metricsConfig);
+        const performanceTest = new PerformanceTest(
+            config,
+            metricsConfig,
+            uuid => new MetricsStore(uuid, this.persistenceClient, metricsConfig)
+        );
         performanceTest.planJobsCompletedCallback = () => this._performancePlanCompleted(performanceTest);
         performanceTest.runJobsCompletedCallback = () => this._performanceRunCompleted(performanceTest);
         this.performanceTests.push(performanceTest);

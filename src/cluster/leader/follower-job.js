@@ -14,13 +14,17 @@ class FollowerJob {
      * @param {object} config                   The job config.
      * @param {String} type                     The type of job.
      * @param {Function} statusChangeCallback   A function which is called when the status of the job changes.
+     * @param {Function} completedCallback      A function which is called when the job completes.
      */
-    constructor(config, type, statusChangeCallback) {
-        this.config = config;
-        this.status = followerJobStatus.WAITING;
+    constructor(config, type, statusChangeCallback, completedCallback) {
         this.uuid = uuidv4();
-        this.statusChangeCallback = statusChangeCallback;
+
+        this.config = config;
         this.type = type;
+        this.statusChangeCallback = statusChangeCallback;
+        this.completedCallback = completedCallback;
+
+        this.status = followerJobStatus.WAITING;
     }
 
     /**
@@ -30,12 +34,13 @@ class FollowerJob {
      */
     changeStatus(newStatus, result) {
         if (newStatus == this.status) {
-            logger.info(`Job status change is not new, will do nothing!`);
+            logger.debug(`Job status change is not new, will do nothing!`);
             return;
         }
         this.status = newStatus;
         this.result = result;
         if (this.statusChangeCallback instanceof Function) this.statusChangeCallback(newStatus);
+        if (this.completedCallback instanceof Function) this.completedCallback(result);
     }
 }
 
