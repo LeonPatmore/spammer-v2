@@ -52,6 +52,7 @@
         "websocket": "^1.0.33"
     },
     "jest": {
+        "preset": "@trendyol/jest-testcontainers",
         "clearMocks": true,
         "collectCoverage": true,
         "coverageDirectory": "coverage",

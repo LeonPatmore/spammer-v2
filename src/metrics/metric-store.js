@@ -1,3 +1,4 @@
+const applicationLogger = require('../logger/application-logger');
 const metricTypes = require('./metric-types');
 
 function getColumnsForType(config) {
@@ -28,9 +29,14 @@ class MetricsStore {
 
         new Map(Object.entries(metricsConfig)).forEach((metricConfig, metricName) => {
             const { names, dataTypes } = getColumnsForType(metricConfig);
-            this.persistenceClient.createTable(getMetricTableName(metricName), names, dataTypes).then(table => {
-                this.tables[metricName] = table;
-            });
+            this.persistenceClient
+                .createTable(getMetricTableName(metricName), names, dataTypes)
+                .then(table => {
+                    this.tables[metricName] = table;
+                })
+                .catch(err => {
+                    applicationLogger.warn(`Could not create table due to [ ${err} ]`);
+                });
         });
     }
 
