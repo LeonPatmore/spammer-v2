@@ -70,7 +70,7 @@ describe('Add performance test', () => {
         expect(performanceTest.status).toEqual(performanceTestStatus.RUNNING);
         const runJobUuid = secondJob.uuid;
 
-        spammerLeader.handleJobUpdate('follower-id', runJobUuid, followerJobStatus.COMPLETED, {
+        await spammerLeader.handleJobUpdate('follower-id', runJobUuid, followerJobStatus.COMPLETED, {
             successful_requests: 5,
             total_requests: 4,
             custom_metric: 1,

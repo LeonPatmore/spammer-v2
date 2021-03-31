@@ -211,12 +211,12 @@ class SpammerLeader {
      * @param {*} jobStatus     New job status.
      * @param {*} jobResult     [Optional] Result of the job.
      */
-    handleJobUpdate(followerUuid, jobUuid, jobStatus, jobResult) {
+    async handleJobUpdate(followerUuid, jobUuid, jobStatus, jobResult) {
         logger.debug(
             `Handling job update [ ${jobUuid} ] with status [ ${jobStatus} ] and result [ ${jobResult} ] from follower [ ${followerUuid} ]`
         );
         const job = this.followerJobRepository.getJobWithId(followerUuid, jobUuid);
-        job.changeStatus(jobStatus, jobResult);
+        await job.changeStatus(jobStatus, jobResult);
         logger.info(`Job with ID [ ${jobUuid} ] has updated with status [ ${jobStatus} ]`);
     }
 

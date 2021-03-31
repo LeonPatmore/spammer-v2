@@ -32,15 +32,15 @@ class FollowerJob {
      * @param {String} newStatus    The new job status.
      * @param {object} result       [Optional] The result of the job.
      */
-    changeStatus(newStatus, result) {
+    async changeStatus(newStatus, result) {
         if (newStatus == this.status) {
             logger.debug(`Job status change is not new, will do nothing!`);
             return;
         }
         this.status = newStatus;
         this.result = result;
-        if (this.statusChangeCallback instanceof Function) this.statusChangeCallback(newStatus);
-        if (this.completedCallback instanceof Function) this.completedCallback(result);
+        if (this.statusChangeCallback instanceof Function) await this.statusChangeCallback(newStatus);
+        if (this.completedCallback instanceof Function) await this.completedCallback(result);
     }
 }
 

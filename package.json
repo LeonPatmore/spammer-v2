@@ -5,7 +5,7 @@
     "main": "test.js",
     "scripts": {
         "start": "node src/spammer.js",
-        "test": "jest --env=node --runInBand",
+        "test": "jest --runInBand",
         "lint": "eslint .",
         "mutation": "npx stryker run",
         "postinstall": "patch-package"

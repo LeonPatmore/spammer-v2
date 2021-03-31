@@ -115,7 +115,10 @@ class PerformanceTest {
         this.runJobs.forEach(runJob => {
             if (runJob.status != followerJobStatus.COMPLETED) allJobsCompleted = false;
         });
-        await this._handleMetrics(result);
+        await this._handleMetrics(result).catch(err => {
+            logger.warn(`Could not handle metrics due to [ ${err} ]`);
+        });
+        logger.info(`All jobs completed: ${allJobsCompleted}`);
         if (allJobsCompleted) {
             logger.info(`All run jobs have been completed for performance test [ ${this.uuid} ]`);
             // this.result = metricsCombiner(this.metricsConfig, results);
@@ -124,17 +127,17 @@ class PerformanceTest {
     }
 
     async _handleMetrics(result) {
-        Object.keys(result).forEach(metric => {
+        for (metric in Object.keys(result)) {
             if (this.metricsConfig.hasOwnProperty(metric)) {
                 const thisType = this.metricsConfig[metric].type;
                 const value = result[metric];
                 switch (thisType) {
                     case metricTypes.CONSTANT:
-                        this.metricsStore.insertConstant(metric, value);
+                        await this.metricsStore.insertConstant(metric, value);
                     case metricTypes.ROLLING_TOTAL:
-                        this.metricsStore.addRollingTotal(metric, value);
+                        await this.metricsStore.addRollingTotal(metric, value);
                     case metricTypes.PER_REQUEST_VALUE:
-                        this.metricsStore.addPerRequestValue(
+                        await this.metricsStore.addPerRequestValue(
                             metric,
                             value,
                             Object.keys(this.metricsConfig[metric].parts)
@@ -145,7 +148,7 @@ class PerformanceTest {
             } else {
                 logger.warn(`Ignoring metric [ ${metric} ] since it is not in the metric configuration!`);
             }
-        });
+        }
     }
 }
 
