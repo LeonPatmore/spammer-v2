@@ -46,7 +46,8 @@ describe('Add performance test', () => {
                 custom_metric: {
                     type: 'per_request_value',
                     parts: {
-                        partOne: 'real'
+                        partOne: 'real',
+                        partTwo: 'real'
                     }
                 }
             }
@@ -71,16 +72,29 @@ describe('Add performance test', () => {
         const runJobUuid = secondJob.uuid;
 
         await spammerLeader.handleJobUpdate('follower-id', runJobUuid, followerJobStatus.COMPLETED, {
-            successful_requests: 5,
-            total_requests: 4,
-            custom_metric: 1,
+            failed_requests: 1,
+            successful_requests: 4,
+            custom_metric: [
+                [5, '404'],
+                [2, '200'],
+                [3, '200'],
+                [10, '200'],
+                [7, '200'],
+            ],
         });
 
         expect(performanceTest.status).toEqual(performanceTestStatus.DONE);
         expect(performanceTest.result).toEqual({
-            successful_requests: 5,
-            total_requests: 4,
-            custom_metric: [1],
+            successful_requests: 4,
+            failed_requests: 1,
+            total_requests: 5,
+            custom_metric: [
+                [5, '404'],
+                [2, '200'],
+                [3, '200'],
+                [10, '200'],
+                [7, '200'],
+            ],
         });
     });
     it('WHEN adding a valid performance test AND there are no followers THEN test is waiting for followers', async () => {

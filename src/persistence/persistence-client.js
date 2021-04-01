@@ -12,6 +12,13 @@ class PersistenceClient {
     async createTable(tableName, columns, datatypes) {
         throw new NotImplementedError();
     }
+
+    /**
+     * Close the persistence client, including all connections if applicable.
+     */
+    async close() {
+        throw new NotImplementedError();
+    }
 }
 
 class PersistenceTable {
@@ -25,7 +32,30 @@ class PersistenceTable {
     }
 
     _validateColumn(column) {
-        if (this.columns.indexOf(column) < 0) throw new Error(`The table does not contain the column [ ${element} ]`);
+        if (column != 'id' && this.columns.indexOf(column) < 0)
+            throw new Error(`The table [ ${this.name} ] does not contain the column [ ${column} ]`);
+    }
+
+    /**
+     * Get a list of matching rows given the column and the value.
+     * @param {String} column   The column to match.
+     * @param {String} value    The value to match.
+     * @returns                 A list of rows that have matched.
+     */
+    async getByColumn(column, value) {
+        this._validateColumn(column);
+        return await this._getByColumnImplementation(column, value);
+    }
+
+    async _getByColumnImplementation(column, value) {
+        throw new NotImplementedError();
+    }
+
+    /**
+     * Return all of the values in this table.
+     */
+    async getAll() {
+        throw new NotImplementedError();
     }
 
     /**
@@ -35,7 +65,7 @@ class PersistenceTable {
      */
     async addEntry(values, columns = this.columns) {
         columns.forEach(element => {
-            this._validateColumn();
+            this._validateColumn(element);
         });
         await this._addEntryImplementation(values, columns);
     }
@@ -52,8 +82,8 @@ class PersistenceTable {
      * @returns
      */
     async incrementValue(column, id, value) {
-        this._validateColumn();
-        return await this.incrementValueImplementation(column, id, value);
+        this._validateColumn(column);
+        return await this._incrementValueImplementation(column, id, value);
     }
 
     async _incrementValueImplementation(column, id, value) {
@@ -66,6 +96,11 @@ class PersistenceTable {
      * @param {Number} percentile
      */
     async getPercentileOfColumn(column, percentile) {
+        this._validateColumn(column);
+        return await this._getPercentileOfColumnImplementation(column, percentile);
+    }
+
+    async _getPercentileOfColumnImplementation(column, percentile) {
         throw new NotImplementedError();
     }
 }
@@ -92,6 +127,10 @@ class PostgresClient extends PersistenceClient {
         await this.client.query(`create table if not exists "${tableName}" ( id serial PRIMARY KEY ${tableRows} );`);
         return new PostgresTable(tableName, columns, this.client);
     }
+
+    async close() {
+        await this.client.end();
+    }
 }
 
 class PostgresTable extends PersistenceTable {
@@ -105,23 +144,45 @@ class PostgresTable extends PersistenceTable {
             if (value instanceof String || typeof value == 'string') return `'${value}'`;
             return value;
         });
+        applicationLogger.info(
+            `insert into "${this.name}" (${columns.toString()}) values (${valuesString.toString()});`
+        );
         await this.client.query(
-            `insert into ${this.name} (${columns.toString()}) values (${valuesString.toString()});`
+            `insert into "${this.name}" (${columns.toString()}) values (${valuesString.toString()});`
         );
     }
 
     async _incrementValueImplementation(column, id, value) {
-        await this.client.query(`update ${this.name} set ${column} = ${column} + ${value} where id = ${id};`);
+        applicationLogger.info(
+            `insert into "${this.name}" (id, ${column}) values (${id},${value}) on duplicate key update ${column} = ${column} + ${value};`
+        );
+        await this.client.query(
+            `insert into "${this.name}" as tbl (id, ${column}) values ('${id}', '${value}') ON CONFLICT (id) DO UPDATE SET ${column}=tbl.${column}+${value};`
+        );
     }
 
-    async getPercentileOfColumn(column, percentile) {
+    async _getPercentileOfColumnImplementation(column, percentile) {
         return this.client
             .query(
-                `select percentile_disc(${percentile}) within group (order by ${this.name}.${column}) from ${this.name}`
+                `select percentile_disc(${percentile}) within group (order by ${this.name}.${column}) from "${this.name}";`
             )
             .then(result => {
                 return result.rows['0']['percentile_disc'];
             });
+    }
+
+    async _getByColumnImplementation(column, value) {
+        applicationLogger.warn(`SELECT * FROM "${this.name}" WHERE ${column} = '${value}'`);
+        return this.client.query(`SELECT * FROM "${this.name}";`).then(res => {
+            applicationLogger.info('RELLY LOOK ' + JSON.stringify(res));
+            return res['rows'];
+        });
+    }
+
+    async getAll() {
+        return this.client.query(`SELECT * FROM "${this.name}"`).then(res => {
+            return res['rows'];
+        });
     }
 }
 

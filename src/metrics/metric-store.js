@@ -11,6 +11,7 @@ function getColumnsForType(config) {
         case metricTypes.ROLLING_TOTAL:
             return { names: ['constant'], dataTypes: ['real'] };
         case metricTypes.PERCENTILE:
+        case metricTypes.CALCULATION:
             return { names: ['constant'], dataTypes: ['real'] };
         default:
             throw new Error(`Not sure how to get columns for metric type [ ${type} ]`);
@@ -48,6 +49,19 @@ class MetricsStore {
         }
     }
 
+    async getConstant(metricName) {
+        return this._getTableForMetric(metricName)
+            .getByColumn('id', 0)
+            .then(result => {
+                applicationLogger.info('LOOK ' + JSON.stringify(result));
+                return result[0]['constant'];
+            });
+    }
+
+    async getAllValues(metricName, parts) {
+        return this._getTableForMetric(metricName).getAll();
+    }
+
     async insertConstant(metricName, constant) {
         await this._getTableForMetric(metricName).addEntry([0, constant], ['id', 'constant']);
     }
@@ -57,7 +71,13 @@ class MetricsStore {
     }
 
     async addRollingTotal(metricName, value) {
-        return await this._getTableForMetric(metricName).incrementValue('constant', 0, value);
+        await this._getTableForMetric(metricName).incrementValue('constant', 0, value);
+    }
+
+    async calculateAndPersistPercentile(metricName, targetMetric, targetPart, percentile) {
+        const percentileNum = await this._getTableForMetric(targetMetric).getPercentileOfColumn(targetPart, percentile);
+        await this._getTableForMetric(metricName).addEntry([0, percentileNum], ['id', 'constant']);
+        return percentileNum;
     }
 }
 

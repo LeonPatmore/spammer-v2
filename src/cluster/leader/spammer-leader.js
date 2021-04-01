@@ -227,6 +227,7 @@ class SpammerLeader {
         clearInterval(this.managePerformanceTestsInterval);
         clearInterval(this.managerFollowersInterval);
         await this.websocket.close();
+        await this.persistenceClient.close();
     }
 }
 

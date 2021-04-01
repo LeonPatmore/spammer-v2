@@ -3,6 +3,8 @@ const { FollowerJob, followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 const logger = require('../../logger/application-logger');
 const metricTypes = require('../../metrics/metric-types');
+const applicationLogger = require('../../logger/application-logger');
+const finaliseMetrics = require('../../metrics/metric-finaliser');
 
 const performanceTestStatus = {
     IN_QUEUE: 'in_queue',
@@ -117,31 +119,37 @@ class PerformanceTest {
         });
         await this._handleMetrics(result).catch(err => {
             logger.warn(`Could not handle metrics due to [ ${err} ]`);
+            throw err;
         });
         logger.info(`All jobs completed: ${allJobsCompleted}`);
         if (allJobsCompleted) {
             logger.info(`All run jobs have been completed for performance test [ ${this.uuid} ]`);
-            // this.result = metricsCombiner(this.metricsConfig, results);
+            this.result = await finaliseMetrics(this.metricsStore, this.metricsConfig);
             this.runJobsCompletedCallback();
         }
     }
 
     async _handleMetrics(result) {
-        for (metric in Object.keys(result)) {
+        for (const metric of Object.keys(result)) {
             if (this.metricsConfig.hasOwnProperty(metric)) {
                 const thisType = this.metricsConfig[metric].type;
                 const value = result[metric];
                 switch (thisType) {
                     case metricTypes.CONSTANT:
                         await this.metricsStore.insertConstant(metric, value);
+                        break;
                     case metricTypes.ROLLING_TOTAL:
                         await this.metricsStore.addRollingTotal(metric, value);
+                        break;
                     case metricTypes.PER_REQUEST_VALUE:
-                        await this.metricsStore.addPerRequestValue(
-                            metric,
-                            value,
-                            Object.keys(this.metricsConfig[metric].parts)
-                        );
+                        for (const requestValue of value) {
+                            await this.metricsStore.addPerRequestValue(
+                                metric,
+                                requestValue,
+                                Object.keys(this.metricsConfig[metric].parts)
+                            );
+                        }
+                        break;
                     default:
                         logger.warn(`Not sure how to handle metric [ ${metric} ], type [ ${thisType} ]!`);
                 }
