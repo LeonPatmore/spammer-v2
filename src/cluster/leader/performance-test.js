@@ -145,8 +145,8 @@ class PerformanceTest {
                         for (const requestValue of value) {
                             await this.metricsStore.addPerRequestValue(
                                 metric,
-                                requestValue,
-                                Object.keys(this.metricsConfig[metric].parts)
+                                Object.values(requestValue),
+                                Object.keys(requestValue)
                             );
                         }
                         break;

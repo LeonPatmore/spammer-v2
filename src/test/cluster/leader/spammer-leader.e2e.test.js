@@ -47,7 +47,7 @@ describe('Add performance test', () => {
                     type: 'per_request_value',
                     parts: {
                         partOne: 'real',
-                        partTwo: 'real'
+                        partTwo: 'text'
                     }
                 }
             }
@@ -75,11 +75,11 @@ describe('Add performance test', () => {
             failed_requests: 1,
             successful_requests: 4,
             custom_metric: [
-                [5, '404'],
-                [2, '200'],
-                [3, '200'],
-                [10, '200'],
-                [7, '200'],
+                { partOne: 5, partTwo: '404' },
+                { partOne: 8, partTwo: '200' },
+                { partOne: 2, partTwo: '200' },
+                { partOne: 3, partTwo: '200' },
+                { partOne: 60, partTwo: '200' },
             ],
         });
 
@@ -89,11 +89,11 @@ describe('Add performance test', () => {
             failed_requests: 1,
             total_requests: 5,
             custom_metric: [
-                [5, '404'],
-                [2, '200'],
-                [3, '200'],
-                [10, '200'],
-                [7, '200'],
+                { partone: 5, parttwo: '404' },
+                { partone: 8, parttwo: '200' },
+                { partone: 2, parttwo: '200' },
+                { partone: 3, parttwo: '200' },
+                { partone: 60, parttwo: '200' },
             ],
         });
     });

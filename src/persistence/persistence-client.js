@@ -144,18 +144,12 @@ class PostgresTable extends PersistenceTable {
             if (value instanceof String || typeof value == 'string') return `'${value}'`;
             return value;
         });
-        applicationLogger.info(
-            `insert into "${this.name}" (${columns.toString()}) values (${valuesString.toString()});`
-        );
         await this.client.query(
             `insert into "${this.name}" (${columns.toString()}) values (${valuesString.toString()});`
         );
     }
 
     async _incrementValueImplementation(column, id, value) {
-        applicationLogger.info(
-            `insert into "${this.name}" (id, ${column}) values (${id},${value}) on duplicate key update ${column} = ${column} + ${value};`
-        );
         await this.client.query(
             `insert into "${this.name}" as tbl (id, ${column}) values ('${id}', '${value}') ON CONFLICT (id) DO UPDATE SET ${column}=tbl.${column}+${value};`
         );
@@ -172,9 +166,7 @@ class PostgresTable extends PersistenceTable {
     }
 
     async _getByColumnImplementation(column, value) {
-        applicationLogger.warn(`SELECT * FROM "${this.name}" WHERE ${column} = '${value}'`);
         return this.client.query(`SELECT * FROM "${this.name}";`).then(res => {
-            applicationLogger.info('RELLY LOOK ' + JSON.stringify(res));
             return res['rows'];
         });
     }

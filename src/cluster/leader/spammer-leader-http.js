@@ -125,17 +125,13 @@ class SpammerLeaderHttp extends SpammerLeader {
         this.httpServer.addPutHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.jobStatusPath}`,
             async (req, res) => {
-                try {
-                    await this.handleJobUpdate(
-                        req.body.follower_uuid,
-                        req.body.job_uuid,
-                        req.body.job_status,
-                        req.body.job_result
-                    );
-                    res.end();
-                } catch (e) {
-                    console.log(e);
-                }
+                await this.handleJobUpdate(
+                    req.body.follower_uuid,
+                    req.body.job_uuid,
+                    req.body.job_status,
+                    req.body.job_result
+                );
+                res.end();
             }
         );
 

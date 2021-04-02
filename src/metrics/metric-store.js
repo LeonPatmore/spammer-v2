@@ -53,13 +53,19 @@ class MetricsStore {
         return this._getTableForMetric(metricName)
             .getByColumn('id', 0)
             .then(result => {
-                applicationLogger.info('LOOK ' + JSON.stringify(result));
                 return result[0]['constant'];
             });
     }
 
-    async getAllValues(metricName, parts) {
-        return this._getTableForMetric(metricName).getAll();
+    async getAllValues(metricName) {
+        return this._getTableForMetric(metricName)
+            .getAll()
+            .then(allValues => {
+                return allValues.map(value => {
+                    delete value.id;
+                    return value;
+                });
+            });
     }
 
     async insertConstant(metricName, constant) {
