@@ -75,11 +75,10 @@ class PersistenceTable {
     }
 
     /**
-     * Increment a value in this table. TODO
-     * @param {String} column
-     * @param {Number} id
-     * @param {Number} value
-     * @returns
+     * Increment a value in this table, or create a row if one does not exist with the given id.
+     * @param {String} column   The column of the table.
+     * @param {Number} id       The row ID.
+     * @param {Number} value    The value to increment by.
      */
     async incrementValue(column, id, value) {
         this._validateColumn(column);

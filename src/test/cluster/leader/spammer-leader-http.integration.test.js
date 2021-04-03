@@ -196,7 +196,7 @@ describe('API Tests', () => {
 
     describe('Job status path', () => {
         // TODO: Async error handling not working.
-        it.skip('Test put status WHEN job no valid THEN bad response', async () => {
+        it('Test put status WHEN job no valid THEN bad response', async () => {
             const response = await sendRequest(spammerPort, 'PUT', 'v1/job/status', {
                 follower_uuid: 'follower-id',
                 job_uuid: 'job-id',

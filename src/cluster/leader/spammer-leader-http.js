@@ -53,7 +53,7 @@ class SpammerLeaderHttp extends SpammerLeader {
 
         this.httpServer.addGetHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.performancePath}`,
-            (req, res) => {
+            (_, res) => {
                 const performanceTests = this.performanceTests.map(test => {
                     return {
                         uuid: test.uuid,
@@ -124,14 +124,18 @@ class SpammerLeaderHttp extends SpammerLeader {
 
         this.httpServer.addPutHandler(
             `/${SpammerLeaderHttp.version}/${SpammerLeaderHttp.jobStatusPath}`,
-            async (req, res) => {
-                await this.handleJobUpdate(
-                    req.body.follower_uuid,
-                    req.body.job_uuid,
-                    req.body.job_status,
-                    req.body.job_result
-                );
-                res.end();
+            async (req, res, next) => {
+                try {
+                    await this.handleJobUpdate(
+                        req.body.follower_uuid,
+                        req.body.job_uuid,
+                        req.body.job_status,
+                        req.body.job_result
+                    );
+                    res.end();
+                } catch (err) {
+                    return next(err);
+                }
             }
         );
 
