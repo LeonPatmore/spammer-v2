@@ -27,9 +27,9 @@ jobs:
             - run:
                   name: static-analysis
                   command: npm run lint
-            - run:
-                  name: unit-tests
-                  command: npm test
+            # - run: TODO: Docker is not on circle ci, so we can't run testcontainer.
+            #       name: unit-tests
+            #       command: npm test
       persist_ip:
             executor: aws-cli/default
             steps:
