@@ -5,8 +5,8 @@ import requests
 
 from config_loader import LEADER_URL, FOLLOWER_URL
 from global_fixtures import leader_uuid
+from logger import logger
 from url_utils import url_with_path
-
 
 _leader_uuid = leader_uuid
 
@@ -99,12 +99,10 @@ def test_http_performance_test(_given_one_follower):
 
     assert "result" in performance_response_json
     result = performance_response_json['result']
-    assert "response_code" in result
-    assert isinstance(result["response_code"], list)
-    assert 150 == len(result["response_code"])
-    assert "response_time" in result
-    assert isinstance(result["response_time"], list)
-    assert 150 == len(result["response_time"])
+    logger.info(result)
+    assert "http_response" in result
+    assert isinstance(result["http_response"], list)
+    assert 150 == len(result["http_response"])
 
     assert "successful_requests" in result
     assert 150 == result["successful_requests"]

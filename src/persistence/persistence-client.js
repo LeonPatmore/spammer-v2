@@ -157,9 +157,10 @@ class PostgresTable extends PersistenceTable {
     async _getPercentileOfColumnImplementation(column, percentile) {
         return this.client
             .query(
-                `select percentile_disc(${percentile}) within group (order by ${this.name}.${column}) from "${this.name}";`
+                `select percentile_disc(${percentile}) within group (order by "${this.name}".${column}) from "${this.name}";`
             )
             .then(result => {
+                applicationLogger.info(`Persistence result ${JSON.stringify(result)}`);
                 return result.rows['0']['percentile_disc'];
             });
     }

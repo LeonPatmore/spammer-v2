@@ -87,7 +87,8 @@ class MetricsStore {
     }
 
     async calculateAndPersistPercentile(metricName, targetMetric, targetPart, percentile) {
-        const percentileNum = await this._getTableForMetric(targetMetric).getPercentileOfColumn(targetPart, percentile);
+        const percentileNum =
+            (await this._getTableForMetric(targetMetric).getPercentileOfColumn(targetPart, percentile)) || 0;
         await this._getTableForMetric(metricName).addEntry([0, percentileNum], ['id', 'constant']);
         return percentileNum;
     }
