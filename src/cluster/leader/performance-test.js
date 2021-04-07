@@ -3,7 +3,6 @@ const { FollowerJob, followerJobStatus } = require('../leader/follower-job');
 const jobTypes = require('../job-types');
 const logger = require('../../logger/application-logger');
 const metricTypes = require('../../metrics/metric-types');
-const applicationLogger = require('../../logger/application-logger');
 const finaliseMetrics = require('../../metrics/metric-finaliser');
 
 const performanceTestStatus = {
@@ -117,6 +116,7 @@ class PerformanceTest {
         this.runJobs.forEach(runJob => {
             if (runJob.status != followerJobStatus.COMPLETED) allJobsCompleted = false;
         });
+        logger.info(`Result: ${JSON.stringify(result)}`);
         await this._handleMetrics(result).catch(err => {
             logger.warn(`Could not handle metrics due to [ ${err} ]`);
             throw err;

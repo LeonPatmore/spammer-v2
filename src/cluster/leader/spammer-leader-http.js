@@ -2,6 +2,7 @@ const HttpServer = require('../../server/http-server');
 const httpStatus = require('http-status-codes');
 const { SpammerLeader } = require('./spammer-leader');
 const { spammerErrorHandler, InvalidParamErrorBuilder } = require('../spammer-http-error-handler');
+const applicationLogger = require('../../logger/application-logger');
 
 /**
  * Generates an object of readable metrics given the original object of metrics.
@@ -134,6 +135,8 @@ class SpammerLeaderHttp extends SpammerLeader {
                     );
                     res.end();
                 } catch (err) {
+                    applicationLogger.warn('Error while updating job: ' + err);
+                    console.log(err);
                     return next(err);
                 }
             }

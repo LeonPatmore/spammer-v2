@@ -56,7 +56,9 @@ class SpammerLeaderClientV1 {
             })
             .then(result => {
                 if (result.code != statusCodes.OK)
-                    throw new Error(`Unexected response from the leader, ${result.code} ${result.body}!`);
+                    throw new Error(
+                        `Unexected response from the leader, ${result.code} ${JSON.stringify(result.body)}!`
+                    );
             });
     }
 }

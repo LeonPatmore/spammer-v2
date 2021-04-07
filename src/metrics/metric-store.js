@@ -53,6 +53,12 @@ class MetricsStore {
         return this._getTableForMetric(metricName)
             .getByColumn('id', 0)
             .then(result => {
+                if (result.length <= 0) {
+                    applicationLogger.info(
+                        `Can not get constant for [ ${metricName} ] since there is no row with id 0!`
+                    );
+                    return 0;
+                }
                 return result[0]['constant'];
             });
     }

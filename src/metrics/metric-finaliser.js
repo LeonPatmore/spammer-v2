@@ -9,12 +9,12 @@ async function _handleConstant(metricsStore, metricName) {
 async function _handlePercentile(metricsStore, metricName, metricConfig) {
     const targetMetric = metricConfig.targetMetric;
     const targetPart = metricConfig.part;
-    const percentile = metricConfig.percentile;
+    const percentileFraction = metricConfig.percentile / 100.0;
     const percentileNum = await metricsStore.calculateAndPersistPercentile(
         metricName,
         targetMetric,
         targetPart,
-        percentile
+        percentileFraction
     );
     return { [metricName]: percentileNum };
 }

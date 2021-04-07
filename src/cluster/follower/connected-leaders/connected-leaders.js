@@ -81,7 +81,9 @@ class ConnectedLeaders {
             );
             for (const job of jobs) {
                 const { status, result } = this.jobHandler(leader.uuid, job.uuid, job.config, job.type);
-                this.pushJobStatusUpdate(leader.uuid, job.uuid, status, result);
+                if (typeof status !== 'undefined') {
+                    this.pushJobStatusUpdate(leader.uuid, job.uuid, status, result);
+                }
             }
         }
     }
@@ -109,7 +111,9 @@ class ConnectedLeaders {
         for (var i = this.jobUpdateQueue.length; i--; ) {
             const jobUpdate = this.jobUpdateQueue[i];
             logger.info(
-                `Sending status update for id [ ${jobUpdate.jobUuid} ], status [ ${jobUpdate.jobStatus} ] and result [ ${jobUpdate.jobResult} ]`
+                `Sending status update for id [ ${jobUpdate.jobUuid} ], status [ ${
+                    jobUpdate.jobStatus
+                } ] and result [ ${JSON.stringify(jobUpdate.jobResult)} ]`
             );
             const leader = this.leaders.get(jobUpdate.leaderUuid);
             await spammerLeaderClients[leader.version].updateJobStatus(

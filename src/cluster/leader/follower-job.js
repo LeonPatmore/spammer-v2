@@ -40,7 +40,8 @@ class FollowerJob {
         this.status = newStatus;
         this.result = result;
         if (this.statusChangeCallback instanceof Function) await this.statusChangeCallback(newStatus);
-        if (this.completedCallback instanceof Function) await this.completedCallback(result);
+        if (this.completedCallback instanceof Function && newStatus == followerJobStatus.COMPLETED)
+            await this.completedCallback(result);
     }
 }
 

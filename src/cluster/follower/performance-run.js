@@ -10,8 +10,6 @@ class PerformanceRun extends Repeater {
                 metricsManager.incrementMetric(PerformanceRun.successMetric);
             } catch (e) {
                 metricsManager.incrementMetric(PerformanceRun.failedMetric);
-            } finally {
-                metricsManager.incrementMetric(PerformanceRun.totalMetric);
             }
         };
         super(runRequestWithMetrics, rps, runtimeSeconds);

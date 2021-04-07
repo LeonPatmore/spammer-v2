@@ -54,7 +54,7 @@ class SpammerFollower {
      */
     handleJob(leaderUuid, jobUuid, jobConfig, jobType) {
         if (this.jobsHandledPersistence.hasJob(jobUuid)) {
-            logger.info(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
+            logger.debug(`Skipping job with id [ ${jobUuid} ] since it has already been handled!`);
             return {};
         }
         if (!this.connectedLeaders.hasUuid(leaderUuid))
@@ -101,7 +101,7 @@ class SpammerFollower {
             return { status: followerJobStatus.REJECTED };
         }
         this.performanceRun.run.run(result => {
-            logger.info(`Finished performance run with result [ ${result} ]`);
+            logger.info(`Finished performance run with result [ ${JSON.stringify(result)} ]`);
             this.connectedLeaders.pushJobStatusUpdate(leaderUuid, jobUuid, followerJobStatus.COMPLETED, result);
             this._resetPerformanceRun();
         });
