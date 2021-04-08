@@ -70,12 +70,20 @@
             "image": {"Fn::Sub": ["leonpatmore/spammer-v2:${Version}", {"Version": {"Ref": "Version"}}]},
             "essential": true,
             "name": "leader",
-            "PortMappings": [{
-              "ContainerPort": 5435
-            },
-            {
-              "ContainerPort": 13402
-            }],
+            "PortMappings": [
+              {
+                "ContainerPort": 5435
+              },
+              {
+                "ContainerPort": 13402
+              }
+            ],
+            "DependsOn": [
+              {
+                "Condition": "HEALTHY",
+                "ContainerName": "postgres"
+              }
+            ],
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -84,7 +92,13 @@
                 "awslogs-group": "leader",
                 "awslogs-stream-prefix": "spammer/ci"
               }
-            }
+            },
+            "Environment": [
+              {
+                "Name": "SPAMMER_DATABASE_HOST",
+                "Value": "127.0.0.1"
+              }
+            ]
           },
           {
             "environment": [
@@ -149,7 +163,12 @@
                 "Name": "POSTGRES_PASSWORD",
                 "Value": "spammer"
               }
-            ]
+            ],
+            "HealthCheck": {
+              "Command": ["CMD-SHELL", "pg_isready -U postgres"],
+              "Interval": 5,
+              "Retries": 5
+            }
           }
         ],
         "memory": "512",
