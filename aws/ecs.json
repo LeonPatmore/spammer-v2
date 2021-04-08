@@ -22,10 +22,48 @@
         "ClusterName": "SpammerV2Cluster"
       }
     },
+    "ExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": ["ecs-tasks.amazonaws.com"]
+              },
+              "Action": ["sts:AssumeRole"]
+            }
+          ] 
+        },
+        "Policies": [{
+          "PolicyName": "all",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetAuthorizationToken",
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage",
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+            ]
+          }
+        }]
+      }
+    },
     "Task": {
       "Type": "AWS::ECS::TaskDefinition",
       "Properties": {
-        "executionRoleArn": "arn:aws:iam::136306849848:role/ecsTaskExecutionRole",
+        "executionRoleArn": {"Fn::GetAtt" : ["ExecutionRole", "Arn"] },
         "containerDefinitions": [
           {
             "environment": [],
@@ -39,7 +77,13 @@
               "ContainerPort": 13402
             }],
             "LogConfiguration": {
-              "LogDriver": "awslogs"
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-region":  { "Ref" : "AWS::Region" },
+                "awslogs-create-group": true,
+                "awslogs-group": "leader",
+                "awslogs-stream-prefix": "spammer/ci"
+              }
             }
           },
           {
@@ -60,7 +104,13 @@
               "ContainerPort": 1234
             }],
             "LogConfiguration": {
-              "LogDriver": "awslogs"
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-region":  { "Ref" : "AWS::Region" },
+                "awslogs-create-group": true,
+                "awslogs-group": "follower",
+                "awslogs-stream-prefix": "spammer/ci"
+              }
             }
           },
           {
