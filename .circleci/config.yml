@@ -77,7 +77,7 @@ workflows:
             - aws-cloudformation/create-stack:
                   stack-name: SpammerV2CI
                   template-file-path: aws/ecs.json
-                  extra-arguments: --parameters ParameterKey=Version,ParameterValue=${CIRCLE_SHA1} ParameterKey=Subnets,ParameterValue=subnet-3f024e59
+                  extra-arguments: --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=${CIRCLE_SHA1} ParameterKey=Subnets,ParameterValue=subnet-3f024e59
                   requires: 
                   - build_test
                   - docker/publish
