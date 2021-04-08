@@ -4,3 +4,4 @@
 x 17/03/2021 24/02/2021 Functioal tests @test
 21/03/2021 Add timestamps to jobs
 27/03/2021 Refactor follower and leader into different internal directories @improvement
+07/04/2021 Support postgres db in ecs @ci

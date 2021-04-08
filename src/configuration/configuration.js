@@ -46,7 +46,7 @@ const config = convict({
     databaseHost: {
         doc: '[Optional] The database host.',
         format: String,
-        default: '192.168.99.100',
+        default: 'localhost',
         env: 'SPAMMER_DATABASE_HOST',
     },
     databasePort: {

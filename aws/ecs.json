@@ -37,7 +37,10 @@
             },
             {
               "ContainerPort": 13402
-            }]
+            }],
+            "LogConfiguration": {
+              "LogDriver": "awslogs"
+            }
           },
           {
             "environment": [
@@ -55,7 +58,10 @@
             "name": "follower",
             "PortMappings": [{
               "ContainerPort": 1234
-            }]
+            }],
+            "LogConfiguration": {
+              "LogDriver": "awslogs"
+            }
           },
           {
             "image": "mhausenblas/simpleservice:0.5.0",
@@ -72,6 +78,28 @@
             "PortMappings": [{
               "ContainerPort": 3000
             }]
+          },
+          {
+            "image": "postgres",
+            "essential": true,
+            "name": "postgres",
+            "PortMappings": [{
+              "ContainerPort": 5432
+            }],
+            "environment": [
+              {
+                "Name": "POSTGRES_DB",
+                "Value": "spammer"
+              },
+              {
+                "Name": "POSTGRES_USER",
+                "Value": "spammer"
+              },
+              {
+                "Name": "POSTGRES_PASSWORD",
+                "Value": "spammer"
+              }
+            ]
           }
         ],
         "memory": "512",
